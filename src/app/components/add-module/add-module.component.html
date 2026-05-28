@@ -1,0 +1,127 @@
+<div class="modal-overlay" (click)="onClose()"></div>
+<div class="modal-container">
+    <div class="modal-header">
+        <h2>Novo módulo</h2>
+        <button class="close-btn" (click)="onClose()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <div class="modal-content">
+        <form [formGroup]="moduleForm" (ngSubmit)="onSubmit()">
+            <div class="form-container">
+                <!-- Nome do módulo -->
+                <div class="form-field">
+                    <label for="name">Nome do módulo</label>
+                    <input id="name" type="text" formControlName="name" placeholder="Digite o nome do módulo"
+                        (input)="onInputChange()"
+                        [class.valid]="moduleForm.get('name')?.valid && moduleForm.get('name')?.value?.trim()"
+                        [class.invalid]="moduleForm.get('name')?.invalid && moduleForm.get('name')?.touched">
+                    <div *ngIf="moduleForm.get('name')?.invalid && moduleForm.get('name')?.touched" class="field-error">
+                        <span *ngIf="moduleForm.get('name')?.errors?.['required']">Nome do módulo é obrigatório</span>
+                        <span *ngIf="moduleForm.get('name')?.errors?.['maxlength']">Nome deve ter no máximo 100
+                            caracteres</span>
+                    </div>
+                </div>
+
+                <!-- Capa do módulo -->
+                <div class="form-field">
+                    <label for="cover">Capa do módulo</label>
+                    <div class="image-upload-area" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
+                        [class.has-image]="imagePreviewUrl" [class.uploading]="isUploadingImage"
+                        [class.uploaded]="uploadedImageUrl && !isUploadingImage && !imageUploadError"
+                        [class.error]="imageUploadError">
+
+                        <div *ngIf="!imagePreviewUrl" class="upload-placeholder">
+                            <div class="upload-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21,15 16,10 5,21"></polyline>
+                                </svg>
+                            </div>
+                            <button type="button" class="upload-btn" (click)="fileInput.click()">
+                                Adicionar imagem
+                            </button>
+                            <div class="upload-specs">
+                                <div>Medidas sugeridas: 1920x1080</div>
+                                <div>Tamanho: 5MB</div>
+                            </div>
+                        </div>
+
+                        <div *ngIf="imagePreviewUrl" class="image-preview">
+                            <img [src]="imagePreviewUrl" alt="Preview da imagem">
+                            <div class="image-actions">
+                                <!-- <button type="button" class="change-image-btn" (click)="fileInput.click()">
+                                    Trocar imagem
+                                </button> -->
+                                <button type="button" class="remove-image-btn" (click)="removeImage()">
+                                    Remover
+                                </button>
+                            </div>
+                        </div>
+
+                        <input #fileInput id="fileInput" type="file" accept="image/*" (change)="onImageSelect($event)"
+                            style="display: none;">
+                    </div>
+
+                    <!-- Status da imagem -->
+                    <div class="image-status" *ngIf="isUploadingImage || imageUploadError || uploadedImageUrl">
+                        <div class="status-message uploading" *ngIf="isUploadingImage">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7,10 12,15 17,10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Fazendo upload da imagem...
+                        </div>
+                        <div class="status-message error" *ngIf="imageUploadError">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                            {{ imageUploadError }}
+                        </div>
+                        <div class="status-message success"
+                            *ngIf="uploadedImageUrl && !isUploadingImage && !imageUploadError">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="20,6 9,17 4,12"></polyline>
+                            </svg>
+                            Imagem carregada com sucesso
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <div *ngIf="error" class="error-message">
+                {{ error }}
+            </div>
+
+            <div *ngIf="successMessage" class="success-message">
+                {{ successMessage }}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="modal-actions">
+                <button type="button" class="cancel-btn" (click)="onClose()" [disabled]="isLoading">
+                    Cancelar
+                </button>
+                <button type="submit" class="create-btn" [disabled]="!isFormValid" [title]="getButtonTooltip()">
+                    <span *ngIf="!isLoading">Criar módulo</span>
+                    <span *ngIf="isLoading">Criando...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

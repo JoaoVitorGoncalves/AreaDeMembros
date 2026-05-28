@@ -1,0 +1,677 @@
+<div class="admin-cargo-detail-bg">
+    <div class="cargo-header">
+        <!-- <img class="cargo-cover" src="/assets/images/logo.png" alt="Capa do cargo"> -->
+        <div style="cursor: pointer;" (click)="close.emit()">
+            <svg _ngcontent-ng-c3710355836="" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <line _ngcontent-ng-c3710355836="" x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline _ngcontent-ng-c3710355836="" points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </div>
+        <div class="cargo-header-info">
+            <div class="cargo-title-row">
+                <h2 class="cargo-title">{{ cargo?.name || 'Curso não encontrado' }}</h2>
+            </div>
+            <div class="cargo-badges-row">
+                <span class="cargo-badge cargo-badge-type">Curso online</span>
+                <span class="cargo-badge cargo-badge-users">
+                    {{ cargo?.users_count || 0 }} {{ (cargo?.users_count || 0) === 1 ? 'usuário' : 'usuários' }}
+                </span>
+                <span class="cargo-badge cargo-badge-status">
+                    {{ cargo?.active ? 'Ativo' : 'Inativo' }}
+                    <label class="switch">
+                        <input type="checkbox" [checked]="cargo?.active" (change)="onActiveStatusChange($event)">
+                        <span class="slider round"></span>
+                    </label>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="cargo-tabs-row">
+        <div class="cargo-tab" [class.cargo-tab-active]="isActiveTab('conteudo')" (click)="setActiveTab('conteudo')">
+            Conteúdo
+        </div>
+        <div class="cargo-tab" [class.cargo-tab-active]="isActiveTab('usuarios')" (click)="setActiveTab('usuarios')">
+            Usuários
+        </div>
+        <div class="cargo-tab" [class.cargo-tab-active]="isActiveTab('ferramentas')"
+            (click)="setActiveTab('ferramentas')">
+            Ferramentas
+        </div>
+        <div class="cargo-tab" [class.cargo-tab-active]="isActiveTab('suporte')" (click)="setActiveTab('suporte')">
+            Suporte ao usuário
+        </div>
+        <div class="cargo-tab" [class.cargo-tab-active]="isActiveTab('configuracoes')"
+            (click)="setActiveTab('configuracoes')">
+            Configurações
+        </div>
+    </div>
+
+    <!-- Conteúdo da Tab Conteúdo -->
+    <div *ngIf="isActiveTab('conteudo')" class="cargo-tab-content cargo-tab-content--conteudo">
+        <div class="cargo-toolbar-row">
+            <!-- <label class="cargo-select-all">
+                <input type="checkbox" disabled>
+                Selecionar todos
+            </label> -->
+            <div style="display: flex;flex-direction: column;gap: 8px;">
+                <div class="cargo-users-title">Conteúdo</div>
+                <div class="cargo-users-desc">Gerencie todos os conteúdos desse curso</div>
+            </div>
+            <button class="cargo-add-module-btn" (click)="showAddModuleModal()" style="position: relative;">
+                Adicionar Módulo
+                <div style="display: flex; align-items: center; margin-left: 4px;cursor: pointer;">
+                    <div (click)="showModuleDropdownMenu($event)">
+                        <div style="display: flex;" [innerHTML]="'admin-chev' | svgIcon: '': 20: 20"></div>
+                    </div>
+                    <div *ngIf="showModuleDropdown" class="dropdown-menu" (click)="$event.stopPropagation()">
+                        <div (click)="onCreateModule()" class="dropdown-menu-item">
+                            <span class="dropdown-menu-item-icon"><svg width="20" height="20" viewBox="0 0 20 20"
+                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M10.0003 4.16699V15.8337M4.16699 10.0003H15.8337" stroke="#EFEFEF"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span> Criar módulo
+                        </div>
+                        <div (click)="onAddExistingModule()" class="dropdown-menu-item">
+                            <span class="dropdown-menu-item-icon"><svg width="16" height="16" viewBox="0 0 16 16"
+                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_2443_563)">
+                                        <path
+                                            d="M1.33301 11.333L7.99967 14.6663L14.6663 11.333M1.33301 7.99967L7.99967 11.333L14.6663 7.99967M7.99967 1.33301L1.33301 4.66634L7.99967 7.99967L14.6663 4.66634L7.99967 1.33301Z"
+                                            stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_2443_563">
+                                            <rect width="16" height="16" fill="white" />
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                            </span> Adicionar módulo existente
+                        </div>
+                    </div>
+                </div>
+            </button>
+        </div>
+        <!-- Loading State -->
+        <div *ngIf="modulesLoading$ | async" class="cargo-modules-loading">
+            <p>Carregando módulos...</p>
+        </div>
+
+        <!-- Modules List -->
+        <div *ngIf="!(modulesLoading$ | async)" class="cargo-modules-list">
+            <!-- Empty State -->
+            <div *ngIf="(modules$ | async)?.length === 0" class="cargo-modules-empty">
+                <p>Nenhum módulo encontrado para este cargo.</p>
+            </div>
+
+            <!-- Module Cards -->
+            <div *ngFor="let module of modules$ | async; let i = index" class="cargo-module-container">
+                <div class="cargo-module-card" [class.expanded]="isModuleExpanded(module.id)">
+                    <div class="cargo-module-left">
+                        <span class="cargo-module-drag">&#8942;&#8942;</span>
+                        <!-- <input type="checkbox" class="cargo-module-checkbox" disabled> -->
+                        <div class="cargo-module-info">
+                            <span class="cargo-module-title">{{ module.name }}</span>
+                            <div class="cargo-module-title-row">
+                                <span class="cargo-module-badge">Módulo</span>
+                                <!-- <span class="cargo-module-content-count">{{ module.contentCount || 0 }} conteúdo</span> -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cargo-module-actions">
+                        <button class="cargo-module-action-btn"
+                            (click)="showAddLessonModal(module.id, module.name)"><svg width="15" height="15"
+                                viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7.5 3.125V11.875M3.125 7.5H11.875" stroke="#5E74FF" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <div
+                            style="position: relative;width: 32px;height: 32px; display: flex;align-items: center;justify-content: center;">
+                            <span class="cargo-users-table-actions" style="padding: 0;"
+                                (click)="showModuleActionsDropdown(i, $event)">⋮</span>
+                            <div *ngIf="dropdownModuleIndex === i" class="dropdown-menu"
+                                style="right: 50%;top:0; min-width: 180px; position: absolute; z-index: 1000;"
+                                (click)="$event.stopPropagation()">
+                                <div class="dropdown-menu-item" (click)="onDeleteModule(module)">
+                                    <span class="dropdown-menu-item-icon">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <path
+                                                d="M2 4H14M6 7V11M10 7V11M3 4V14C3 14.5523 3.44772 15 4 15H12C12.5523 15 13 14.5523 13 14V4"
+                                                stroke="#FF4D4F" stroke-width="1.6" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </svg>
+                                    </span>
+                                    Excluir
+                                </div>
+                                <div class="dropdown-menu-item" (click)="onDeleteModuleFromRole(module)">
+                                    <span class="dropdown-menu-item-icon">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <path
+                                                d="M2 4H14M6 7V11M10 7V11M3 4V14C3 14.5523 3.44772 15 4 15H12C12.5523 15 13 14.5523 13 14V4"
+                                                stroke="#FF4D4F" stroke-width="1.6" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </svg>
+                                    </span>
+                                    Excluir do curso
+                                </div>
+                            </div>
+                        </div>
+                        <button class="cargo-module-action-btn-transparent"
+                            (click)="toggleModuleExpansion(module.id)"><svg width="16" height="16" viewBox="0 0 16 16"
+                                fill="none" xmlns="http://www.w3.org/2000/svg"
+                                [class.expanded]="isModuleExpanded(module.id)">
+                                <path d="M4 6L8 10L12 6" stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Conteúdo expandido do módulo -->
+                <div class="cargo-module-expanded-content" [class.expanded]="isModuleExpanded(module.id)">
+                    <div class="cargo-module-expanded-content-inner">
+                        <div *ngIf="!module.lessons || module.lessons.length === 0" class="cargo-modules-empty"
+                            style="background: transparent; min-height: auto;">
+                            <p>Ainda não há aulas para esse módulo.</p>
+                        </div>
+                        <div class="cargo-module-lesson-card" *ngFor="let lesson of module.lessons; let i = index">
+                            <div class="cargo-module-lesson-left">
+                                <span class="cargo-module-drag">&#8942;&#8942;</span>
+                                <!-- <input type="checkbox" class="cargo-module-checkbox" disabled> -->
+                                <button class="cargo-module-play-btn" (click)="showLessonViewer(lesson, module)">
+                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4 3L8 6L4 9V3Z" fill="#5E74FF" />
+                                    </svg>
+                                </button>
+                                <div class="cargo-module-lesson-info">
+                                    <span class="cargo-module-lesson-title">{{ lesson.name }}</span>
+                                    <span class="cargo-module-lesson-status">Publicado</span>
+                                </div>
+                            </div>
+                            <div class="cargo-module-lesson-actions">
+                                <div
+                                    style="position: relative;width: 32px;height: 32px; display: flex;align-items: center;justify-content: center;">
+                                    <span class="cargo-users-table-actions" style="padding: 0;"
+                                        (click)="showLessonActionsDropdown(i, $event)">⋮</span>
+                                    <div *ngIf="dropdownLessonIndex === i" class="dropdown-menu"
+                                        style="right: 50%;top:0; min-width: 180px; position: absolute; z-index: 1000;"
+                                        (click)="$event.stopPropagation()">
+                                        <div class="dropdown-menu-item" (click)="onDeleteLesson(lesson, module)">
+                                            <span class="dropdown-menu-item-icon">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                                    <path
+                                                        d="M2 4H14M6 7V11M10 7V11M3 4V14C3 14.5523 3.44772 15 4 15H12C12.5523 15 13 14.5523 13 14V4"
+                                                        stroke="#FF4D4F" stroke-width="1.6" stroke-linecap="round"
+                                                        stroke-linejoin="round" />
+                                                </svg>
+                                            </span>
+                                            Excluir
+                                        </div>
+                                        <div class="dropdown-menu-item"
+                                            (click)="onDeleteLessonFromModule(lesson, module)">
+                                            <span class="dropdown-menu-item-icon">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                                    <path
+                                                        d="M2 4H14M6 7V11M10 7V11M3 4V14C3 14.5523 3.44772 15 4 15H12C12.5523 15 13 14.5523 13 14V4"
+                                                        stroke="#FF4D4F" stroke-width="1.6" stroke-linecap="round"
+                                                        stroke-linejoin="round" />
+                                                </svg>
+                                            </span>
+                                            Excluir do módulo
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo da Tab Usuários -->
+    <div *ngIf="isActiveTab('usuarios')" class="cargo-tab-content">
+        <div class="cargo-users-section">
+            <div class="cargo-users-header-row">
+                <div style="display: flex;flex-direction: column;gap: 8px;">
+                    <div class="cargo-users-title">Usuários</div>
+                    <div class="cargo-users-desc">Gerencie todos os usuários desse curso</div>
+                </div>
+                <button class="cargo-users-add-btn" (click)="showAddUserSidebar()" style="position: relative;">
+                    Adicionar Usuários
+                    <div style="display: flex; align-items: center; margin-left: 4px;cursor: pointer;">
+                        <div (click)="showUserDropdownMenu($event)">
+                            <div style="display: flex;" [innerHTML]="'admin-chev' | svgIcon: '': 20: 20"></div>
+                        </div>
+                        <div *ngIf="showUserDropdown" class="dropdown-menu" (click)="$event.stopPropagation()">
+                            <div (click)="onCreateUser()" class="dropdown-menu-item">
+                                <span class="dropdown-menu-item-icon"><svg width="20" height="20" viewBox="0 0 20 20"
+                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10.0003 4.16699V15.8337M4.16699 10.0003H15.8337" stroke="#EFEFEF"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </span> Criar usuário
+                            </div>
+                            <div (click)="onAddExistingUser()" class="dropdown-menu-item">
+                                <span class="dropdown-menu-item-icon"><svg width="16" height="16" viewBox="0 0 16 16"
+                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <g clip-path="url(#clip0_2443_563)">
+                                            <path
+                                                d="M1.33301 11.333L7.99967 14.6663L14.6663 11.333M1.33301 7.99967L7.99967 11.333L14.6663 7.99967M7.99967 1.33301L1.33301 4.66634L7.99967 7.99967L14.6663 4.66634L7.99967 1.33301Z"
+                                                stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </g>
+                                        <defs>
+                                            <clipPath id="clip0_2443_563">
+                                                <rect width="16" height="16" fill="white" />
+                                            </clipPath>
+                                        </defs>
+                                    </svg>
+                                </span> Adicionar usuário existente
+                            </div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+            <div class="cargo-users-search-row">
+                <div class="cargo-users-search-box">
+                    <input type="text" placeholder="Buscar por nome ou email" [(ngModel)]="userSearchTerm"
+                        (ngModelChange)="onUserSearchTermChange($event)" />
+                    <span class="cargo-users-search-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M14 14L11.1 11.1M12.6667 7.33333C12.6667 10.2789 10.2789 12.6667 7.33333 12.6667C4.38781 12.6667 2 10.2789 2 7.33333C2 4.38781 4.38781 2 7.33333 2C10.2789 2 12.6667 4.38781 12.6667 7.33333Z"
+                                stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                </div>
+                <button class="cargo-users-filter-btn">Filtrar</button>
+            </div>
+
+            <!-- Loading State -->
+            <div *ngIf="loading$ | async" class="cargo-users-loading">
+                <p>Carregando usuários...</p>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="error$ | async as error" class="cargo-users-error">
+                <p>{{ error }}</p>
+                <button (click)="refreshUsers()" class="cargo-users-retry-btn">Tentar novamente</button>
+            </div>
+
+            <!-- Content -->
+            <ng-container *ngIf="!(loading$ | async) && !(error$ | async)">
+                <!-- Estatísticas -->
+                <div class="cargo-users-stats-row" *ngIf="(users$ | async) as users">
+                    <ng-container *ngIf="(progressStatistics$ | async) as progressStats">
+                        <div class="cargo-users-stat-card">
+                            <div class="cargo-users-stat-value">{{ users.length }}</div>
+                            <div class="cargo-users-stat-label">Total de usuários</div>
+                        </div>
+                        <div class="cargo-users-stat-card">
+                            <div class="cargo-users-stat-value">{{ calculateStats(users).averageProgress }}%</div>
+                            <div
+                                style="display: flex; width: 100%; justify-content: space-between; align-items: center;">
+                                <div class="cargo-users-stat-label" style="width: 50%;">Progresso médio</div>
+                                <div class="cargo-users-stat-bar">
+                                    <div class="cargo-users-stat-bar-inner"
+                                        [style.width]="calculateStats(users).averageProgress + '%'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cargo-users-stat-card">
+                            <div class="cargo-users-stat-value">{{ getAverageEngagement(users) }}</div>
+                            <div class="cargo-users-stat-label">Engajamento</div>
+                            <span class="cargo-users-stat-engagement-icon">
+                                <svg width="25" height="19" viewBox="0 0 25 19" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M0 14C0 12.8954 0.895431 12 2 12C3.10457 12 4 12.8954 4 14V17C4 18.1046 3.10457 19 2 19C0.895431 19 0 18.1046 0 17V14Z"
+                                        [attr.fill]="averageEngagementLevel >= 1 ? '#5E87FF' : '#444444'" />
+                                    <path
+                                        d="M7 10C7 8.89543 7.89543 8 9 8C10.1046 8 11 8.89543 11 10V17C11 18.1046 10.1046 19 9 19C7.89543 19 7 18.1046 7 17V10Z"
+                                        [attr.fill]="averageEngagementLevel >= 2 ? '#5E87FF' : '#444444'" />
+                                    <path
+                                        d="M14 6C14 4.89543 14.8954 4 16 4C17.1046 4 18 4.89543 18 6V17C18 18.1046 17.1046 19 16 19C14.8954 19 14 18.1046 14 17V6Z"
+                                        [attr.fill]="averageEngagementLevel >= 3 ? '#5E87FF' : '#444444'" />
+                                    <path
+                                        d="M21 2C21 0.895431 21.8954 0 23 0C24.1046 0 25 0.895431 25 2V17C25 18.1046 24.1046 19 23 19C21.8954 19 21 18.1046 21 17V2Z"
+                                        [attr.fill]="averageEngagementLevel >= 4 ? '#5E87FF' : '#444444'" />
+                                </svg>
+                            </span>
+                        </div>
+                    </ng-container>
+                </div>
+
+                <!-- Tabela de Usuários -->
+                <div class="cargo-users-table" *ngIf="users$ | async as users">
+                    <ng-container *ngIf="(progressStatistics$ | async) as progressStats">
+                        <div class="cargo-users-table-header">
+                            <div class="cargo-users-table-col cargo-users-table-col-name">Nome e Email</div>
+                            <div class="cargo-users-table-col cargo-users-table-col-access"
+                                style="justify-content: center;">Último acesso</div>
+                            <div class="cargo-users-table-col cargo-users-table-col-engagement"
+                                style="justify-content: center;">Engajamento</div>
+                            <div class="cargo-users-table-col cargo-users-table-col-progress"
+                                style="justify-content: center;">Progresso</div>
+                            <div class="cargo-users-table-col cargo-users-table-col-actions"></div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div *ngIf="filteredUsers.length === 0" class="cargo-users-empty">
+                            <p>Nenhum usuário encontrado para este cargo.</p>
+                        </div>
+
+                        <!-- User Rows -->
+                        <div class="cargo-users-table-row" *ngFor="let user of filteredUsers; let i = index">
+                            <div class="cargo-users-table-col cargo-users-table-col-name">
+                                <span class="cargo-users-avatar" [style.background]="getAvatarColor(user.id)">
+                                    {{ getInitials(user.name) }}
+                                </span>
+                                <div class="cargo-users-info">
+                                    <div class="cargo-users-name">{{ user.name }}</div>
+                                    <div class="cargo-users-email">{{ user.email }}</div>
+                                </div>
+                            </div>
+                            <div class="cargo-users-table-col cargo-users-table-col-access"
+                                style="justify-content: center;">
+                                {{ getUserLastAccess(user) }}
+                            </div>
+                            <div class="cargo-users-table-col cargo-users-table-col-engagement"
+                                style="justify-content: center;">
+                                <span [style.color]="getEngagementColor(getUserEngagement(user))">
+                                    {{ getUserEngagement(user) }}
+                                </span>
+                            </div>
+                            <div class="cargo-users-table-col cargo-users-table-col-progress"
+                                style="justify-content: center;">
+                                {{ getUserProgress(user) }}%
+                            </div>
+                            <div class="cargo-users-table-col cargo-users-table-col-actions"
+                                style="position: relative;">
+                                <span class="cargo-users-table-actions"
+                                    (click)="showUserActionsDropdown(i, $event)">⋮</span>
+                                <div *ngIf="dropdownUserIndex === i" class="dropdown-menu"
+                                    style="right: 50%;top:0; min-width: 180px; position: absolute; z-index: 1000;"
+                                    (click)="$event.stopPropagation()">
+                                    <div class="dropdown-menu-item" (click)="onDeleteUser(user)">
+                                        <span class="dropdown-menu-item-icon">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                                <path
+                                                    d="M2 4H14M6 7V11M10 7V11M3 4V14C3 14.5523 3.44772 15 4 15H12C12.5523 15 13 14.5523 13 14V4"
+                                                    stroke="#FF4D4F" stroke-width="1.6" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </svg>
+                                        </span>
+                                        Excluir
+                                    </div>
+                                    <div class="dropdown-menu-item" (click)="onDeleteUserFromModule(user)">
+                                        <span class="dropdown-menu-item-icon">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                                <path
+                                                    d="M2 4H14M6 7V11M10 7V11M3 4V14C3 14.5523 3.44772 15 4 15H12C12.5523 15 13 14.5523 13 14V4"
+                                                    stroke="#FF4D4F" stroke-width="1.6" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </svg>
+                                        </span>
+                                        Excluir do curso
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+
+    <!-- Conteúdo da Tab Ferramentas -->
+    <div *ngIf="isActiveTab('ferramentas')" class="cargo-tab-content">
+        <div class="cargo-tools-section">
+            <div class="cargo-tools-header-row">
+                <div style="display: flex;flex-direction: column;gap: 8px;">
+                    <div class="cargo-tools-title">Ferramentas e Apps</div>
+                    <div class="cargo-tools-desc">Disponibilize ferramentas utilizadas nas aulas para seus alunos</div>
+                </div>
+                <button class="cargo-tools-add-btn" (click)="showAddToolSidebar()" style="position: relative;">
+                    Adicionar Ferramenta
+                    <div style="display: flex; align-items: center; margin-left: 4px;cursor: pointer;">
+                        <div (click)="showToolDropdownMenu($event)">
+                            <div style="display: flex;" [innerHTML]="'admin-chev' | svgIcon: '': 20: 20"></div>
+                        </div>
+                        <div *ngIf="showToolDropdown" class="dropdown-menu" (click)="$event.stopPropagation()">
+                            <div (click)="onCreateTool()" class="dropdown-menu-item">
+                                <span class="dropdown-menu-item-icon"><svg width="20" height="20" viewBox="0 0 20 20"
+                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10.0003 4.16699V15.8337M4.16699 10.0003H15.8337" stroke="#EFEFEF"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </span> Criar ferramenta
+                            </div>
+                            <div (click)="onAddExistingTool()" class="dropdown-menu-item">
+                                <span class="dropdown-menu-item-icon"><svg width="16" height="16" viewBox="0 0 16 16"
+                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <g clip-path="url(#clip0_2443_563)">
+                                            <path
+                                                d="M1.33301 11.333L7.99967 14.6663L14.6663 11.333M1.33301 7.99967L7.99967 11.333L14.6663 7.99967M7.99967 1.33301L1.33301 4.66634L7.99967 7.99967L14.6663 4.66634L7.99967 1.33301Z"
+                                                stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </g>
+                                        <defs>
+                                            <clipPath id="clip0_2443_563">
+                                                <rect width="16" height="16" fill="white" />
+                                            </clipPath>
+                                        </defs>
+                                    </svg>
+                                </span> Adicionar ferramenta existente
+                            </div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+            <div class="cargo-tools-search-row">
+                <div class="cargo-tools-search-box">
+                    <input type="text" placeholder="Buscar por nome" [(ngModel)]="toolSearchTerm"
+                        (ngModelChange)="onToolSearchTermChange($event)" />
+                    <span class="cargo-tools-search-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M14 14L11.1 11.1M12.6667 7.33333C12.6667 10.2789 10.2789 12.6667 7.33333 12.6667C4.38781 12.6667 2 10.2789 2 7.33333C2 4.38781 4.38781 2 7.33333 2C10.2789 2 12.6667 4.38781 12.6667 7.33333Z"
+                                stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                </div>
+                <button class="cargo-tools-filter-btn">Filtrar</button>
+            </div>
+            <div class="cargo-tools-table-wrapper">
+                <div class="cargo-tools-table-header">
+                    <div class="cargo-tools-table-col cargo-tools-table-col-name">Nome</div>
+                    <div class="cargo-tools-table-col cargo-tools-table-col-desc" style="justify-content: center;">
+                        Descrição</div>
+                    <div class="cargo-tools-table-col cargo-tools-table-col-link" style="justify-content: center;">Link
+                        de acesso</div>
+                    <div class="cargo-tools-table-col cargo-tools-table-col-actions"></div>
+                </div>
+                <!-- Loading State -->
+                <div *ngIf="toolsLoading$ | async" class="cargo-users-loading">
+                    <p>Carregando ferramentas...</p>
+                </div>
+                <!-- Error State -->
+                <div *ngIf="toolsError$ | async as error" class="cargo-users-error">
+                    <p>{{ error }}</p>
+                    <button (click)="refreshTools()" class="cargo-users-retry-btn">Tentar novamente</button>
+                </div>
+                <!-- Content -->
+                <ng-container *ngIf="!(toolsLoading$ | async) && !(toolsError$ | async)">
+                    <div *ngIf="tools$ | async as tools">
+                        <!-- Empty State -->
+                        <div *ngIf="filteredTools.length === 0" class="cargo-users-empty">
+                            <p>Nenhuma ferramenta encontrada para este cargo.</p>
+                        </div>
+                        <!-- Tool Rows -->
+                        <div class="cargo-tools-table-row" *ngFor="let tool of filteredTools; let i = index">
+                            <div class="cargo-tools-table-col cargo-tools-table-col-name">
+                                <div class="tool-icon-wrapper">
+                                    <img [src]="tool.image_url" [alt]="tool.name" class="tool-icon" loading="lazy">
+                                </div>
+                                <span class="cargo-tools-name"><b>{{ tool.name }}</b></span>
+                            </div>
+                            <div class="cargo-tools-table-col cargo-tools-table-col-desc"
+                                style="justify-content: center;">
+                                {{ tool.description }}
+                            </div>
+                            <div class="cargo-tools-table-col cargo-tools-table-col-link"
+                                style="justify-content: center;">
+                                <a [href]="tool.link" target="_blank">{{ tool.link }}</a>
+                            </div>
+                            <div class="cargo-tools-table-col cargo-tools-table-col-actions"
+                                style="position: relative;">
+                                <span class="cargo-tools-table-actions"
+                                    (click)="showToolActionsDropdown(i, $event)">⋮</span>
+                                <div *ngIf="dropdownToolIndex === i" class="dropdown-menu"
+                                    style="right: 60%;top:0; min-width: 180px; position: absolute; z-index: 1000;"
+                                    (click)="$event.stopPropagation()">
+                                    <div class="dropdown-menu-item" (click)="onDeleteTool(tool)">
+                                        <span class="dropdown-menu-item-icon">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                                <path
+                                                    d="M2 4H14M6 7V11M10 7V11M3 4V14C3 14.5523 3.44772 15 4 15H12C12.5523 15 13 14.5523 13 14V4"
+                                                    stroke="#FF4D4F" stroke-width="1.6" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </svg>
+                                        </span>
+                                        Excluir
+                                    </div>
+                                    <div class="dropdown-menu-item" (click)="onDeleteToolFromRole(tool)">
+                                        <span class="dropdown-menu-item-icon">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                                <path
+                                                    d="M2 4H14M6 7V11M10 7V11M3 4V14C3 14.5523 3.44772 15 4 15H12C12.5523 15 13 14.5523 13 14V4"
+                                                    stroke="#FF4D4F" stroke-width="1.6" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </svg>
+                                        </span>
+                                        Excluir do curso
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo da Tab Suporte -->
+    <div *ngIf="isActiveTab('suporte')" class="cargo-tab-content">
+        <!-- Loading State -->
+        <div *ngIf="supportLoading$ | async" class="support-loading">
+            <p>Carregando dados de suporte...</p>
+        </div>
+
+        <!-- Content -->
+        <div *ngIf="!(supportLoading$ | async)" class="support-container">
+            <div class="support-header">
+                <div class="support-title">Suporte ao Usuário</div>
+                <div class="support-desc">Disponibilize um número do WhatsApp e email para oferecer suporte a seus
+                    alunos</div>
+            </div>
+            <form class="support-form">
+                <div class="support-field-group">
+                    <label for="support-whatsapp" class="support-label">WhatsApp</label>
+                    <div class="support-input-row">
+                        <input id="support-whatsapp" type="text" class="support-input" [(ngModel)]="supportPhone"
+                            name="whatsapp" placeholder="(99) 9 9999-9999" [disabled]="!isEditingWhatsapp">
+                        <button type="button" class="support-edit-btn" *ngIf="!isEditingWhatsapp"
+                            (click)="isEditingWhatsapp = true">Editar</button>
+                    </div>
+                </div>
+                <div class="support-field-group">
+                    <label for="support-email" class="support-label">Email</label>
+                    <div class="support-input-row">
+                        <input id="support-email" type="email" class="support-input" [(ngModel)]="supportEmail"
+                            name="email" placeholder="seu@email.com" [disabled]="!isEditingEmail">
+                        <button type="button" class="support-edit-btn" *ngIf="!isEditingEmail"
+                            (click)="isEditingEmail = true">Editar</button>
+                    </div>
+                </div>
+                <div class="support-actions" *ngIf="isEditingWhatsapp || isEditingEmail">
+                    <span class="support-cancel" (click)="onSupportCancel()"
+                        [class.disabled]="supportSaving$ | async">Cancelar</span>
+                    <button type="button" class="support-save-btn" (click)="onSupportSave()"
+                        [disabled]="(supportSaving$ | async) || !hasSupportChanges()">
+                        <span *ngIf="!(supportSaving$ | async)">Salvar</span>
+                        <span *ngIf="supportSaving$ | async">Salvando...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Conteúdo da Tab Configurações -->
+    <div *ngIf="isActiveTab('configuracoes')" class="cargo-tab-content">
+        <div class="config-container">
+            <div class="config-section-title">Informações Básicas</div>
+
+            <div class="config-section">
+                <div class="config-field-group">
+                    <label class="config-label">Nome do Curso (Área de Membros)</label>
+                    <div class="config-input-row">
+                        <input type="text" class="config-input" [(ngModel)]="courseName" name="courseName"
+                            [disabled]="!isEditingCourseName" [value]="cargo?.name || ''">
+                        <button type="button" class="config-edit-btn" *ngIf="!isEditingCourseName"
+                            (click)="isEditingCourseName = true">Editar</button>
+                    </div>
+                </div>
+
+                <div class="config-field-group">
+                    <label class="config-label">URL personalizada</label>
+                    <div class="config-url-row">
+                        <div class="config-url-prefix">https://grupomillion.com/club/</div>
+                        <input type="text" class="config-url-input" [(ngModel)]="customUrl" name="customUrl"
+                            [disabled]="!isEditingCustomUrl" [value]="cargo?.custom_url || ''">
+                        <button type="button" class="config-edit-btn" *ngIf="!isEditingCustomUrl"
+                            (click)="isEditingCustomUrl = true">Editar</button>
+                    </div>
+                </div>
+
+                <div class="config-actions" *ngIf="isEditingCourseName || isEditingCustomUrl">
+                    <button type="button" class="config-cancel-btn" (click)="onConfigCancel()">Cancelar</button>
+                    <button type="button" class="config-save-btn" (click)="onConfigSave()"
+                        [disabled]="!hasConfigChanges()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Sidebar -->
+    <app-add-user *ngIf="showAddUserSidebarFlag" [cargo]="cargo" (close)="hideAddUserSidebar()"
+        (userCreated)="onUserCreated($event)">
+    </app-add-user>
+    <app-add-tool *ngIf="showAddToolSidebarFlag" [cargo]="cargo" (close)="hideAddToolSidebar()"
+        (toolCreated)="onToolCreated($event)"></app-add-tool>
+
+    <!-- Add Module Modal -->
+    <app-add-module *ngIf="showAddModuleModalFlag" [cargo]="cargo" (close)="hideAddModuleModal()"
+        (moduleCreated)="onModuleCreated($event)"></app-add-module>
+
+    <!-- Add Lesson Modal -->
+    <app-add-lesson *ngIf="showAddLessonModalFlag" [moduleId]="addLessonModuleId" [moduleName]="addLessonModuleName"
+        (close)="hideAddLessonModal()" (lessonCreated)="onLessonCreated($event)">
+    </app-add-lesson>
+    <ng-container *ngIf="showAddExistingUserModal && (users$ | async) as users">
+        <app-add-existing-user *ngIf="showAddExistingUserModal" [moduleUserIds]="moduleUserIds"
+            [roleId]="cargo?.id ?? 0" (close)="onCloseAddExistingUserModal()" (add)="onAddExistingUserModal($event)">
+        </app-add-existing-user>
+    </ng-container>
+    <app-add-existing-tool *ngIf="showAddExistingToolModal" [moduleToolIds]="[]" [roleId]="cargo?.id ?? 0"
+        (close)="onCloseAddExistingToolModal()" (add)="onAddExistingToolModal($event)"></app-add-existing-tool>
+    <app-add-existing-module *ngIf="showAddExistingModuleModal" [moduleIds]="moduleIds" [roleId]="cargo?.id ?? 0"
+        (close)="onCloseAddExistingModuleModal()" (add)="onAddExistingModuleModal($event)"></app-add-existing-module>
+</div>

@@ -1,0 +1,66 @@
+<div class="modal-overlay" (click)="onClose()"></div>
+
+<!-- Modal de loading -->
+<div *ngIf="loading" class="modal-container add-existing-tool-modal-container"
+    style="display: flex; align-items: center; justify-content: center; min-height: 300px;">
+    <div style="text-align:center; color:#A1A1AA; margin: 32px 0; width: 100%;">Carregando ferramentas...</div>
+</div>
+
+<!-- Modal de erro -->
+<div *ngIf="!loading && error" class="modal-container add-existing-tool-modal-container"
+    style="display: flex; align-items: center; justify-content: center; min-height: 300px;">
+    <div style="text-align:center; color:#EF4444; margin: 32px 0; width: 100%;">{{ error }}</div>
+</div>
+
+<!-- Modal principal -->
+<div *ngIf="!loading && !error" class="modal-container add-existing-tool-modal-container">
+    <div class="add-existing-tool-modal-header">
+        <span class="add-existing-tool-modal-title">Adicionar ferramenta existente</span>
+    </div>
+    <hr class="add-existing-tool-modal-divider" />
+    <div class="add-existing-tool-modal-search-row">
+        <input class="add-existing-tool-modal-search-input" type="text" [(ngModel)]="searchTerm"
+            placeholder="Buscar por nome ou descrição da ferramenta" />
+        <span class="add-existing-tool-modal-search-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M16 16L13 13M14.5 8.25C14.5 11.5637 11.5637 14.5 8.25 14.5C4.93629 14.5 2 11.5637 2 8.25C2 4.93629 4.93629 2 8.25 2C11.5637 2 14.5 4.93629 14.5 8.25Z"
+                    stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </span>
+        <button class="add-existing-tool-modal-search-btn" disabled>Buscar</button>
+    </div>
+    <div class="add-existing-tool-modal-list-header">
+        <span>Ferramentas ({{ filteredTools.length }})</span>
+        <span class="add-existing-tool-modal-select-all" (click)="selectAll()">Selecionar todas</span>
+    </div>
+    <div class="add-existing-tool-modal-list">
+        <ng-container *ngIf="filteredTools.length > 0; else emptyState">
+            <div *ngFor="let tool of filteredTools" class="add-existing-tool-modal-card"
+                [class.selected]="isSelected(tool.id)" (click)="toggleSelect(tool.id)">
+                <div class="add-existing-tool-modal-card-info">
+                    <span class="add-existing-tool-modal-card-icon">
+                        <img [src]="tool.image_url" [alt]="tool.name" width="32" height="32"
+                            style="border-radius:6px;object-fit:cover;">
+                    </span>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <div class="add-existing-tool-modal-card-title">{{ tool.name }}</div>
+                        <div class="add-existing-tool-modal-card-badges">
+                            <span class="add-existing-tool-modal-card-content">{{ tool.description }}</span>
+                        </div>
+                    </div>
+                </div>
+                <input type="checkbox" class="add-existing-tool-modal-checkbox" [checked]="isSelected(tool.id)"
+                    (change)="toggleSelect(tool.id)" />
+            </div>
+        </ng-container>
+        <ng-template #emptyState>
+            <div style="text-align:center; color:#A1A1AA; margin: 32px 0;">Nenhuma ferramenta encontrada.</div>
+        </ng-template>
+    </div>
+    <div class="add-existing-tool-modal-footer">
+        <button class="add-existing-tool-modal-cancel-btn" (click)="onClose()">Cancelar</button>
+        <button class="add-existing-tool-modal-add-btn" [disabled]="selectedIds.size === 0" (click)="onAdd()">Adicionar
+            ferramentas ({{ selectedIds.size }})</button>
+    </div>
+</div>

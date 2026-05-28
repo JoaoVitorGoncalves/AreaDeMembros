@@ -1,0 +1,9 @@
+<div class="app-container" *ngIf="isLoggedIn$ | async; else loginPage">
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+
+<ng-template #loginPage>
+  <router-outlet></router-outlet>
+</ng-template>

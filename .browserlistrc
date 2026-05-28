@@ -1,0 +1,16 @@
+# This file is used by the build system to adjust CSS and JS output to support the specified browsers below.
+# For additional information regarding the format and rule options, please see:
+# https://github.com/browserslist/browserslist#queries
+
+# For the complete list of supported browsers, please see:
+# https://angular.io/guide/browser-support
+
+# Modern browsers that support ES2022+
+last 2 Chrome versions
+last 2 Firefox versions
+last 2 Safari versions
+last 2 Edge versions
+
+# Remove IE support for better optimization
+not IE 11
+not dead 

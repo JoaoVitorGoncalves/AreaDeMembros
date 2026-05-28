@@ -1,0 +1,132 @@
+.main-content {
+    margin-left: 244px;
+    margin-top: 70px;
+    // min-height: calc(100vh - 60px);
+    background: #0f0f0f;
+}
+
+.settings-main {
+    padding: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.settings-content {
+    background: #0f0f0f;
+    padding: 0;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.settings-title {
+    color: #fafafa;
+    font-size: 24px;
+    font-weight: 500;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.settings-subtitle {
+    color: #fafafa;
+    font-size: 15px;
+    margin-top: 4px;
+    margin-bottom: 24px;
+}
+
+.settings-tabs {
+    display: flex;
+    gap: 32px;
+    border-bottom: 1.5px solid #232325;
+    margin-bottom: 32px;
+    margin-left: 0;
+}
+
+.tab {
+    color: #fafafa;
+    font-size: 15px;
+    padding: 0 0 10px 0;
+    cursor: pointer;
+    position: relative;
+    font-weight: 400;
+    transition: color 0.2s;
+}
+
+.tab.active {
+    color: #3b82f6;
+    font-weight: 500;
+}
+
+.tab.active::after {
+    content: '';
+    display: block;
+    height: 2.5px;
+    width: 100%;
+    background: #3b82f6;
+    border-radius: 2px;
+    position: absolute;
+    left: 0;
+    bottom: -1.5px;
+}
+
+.settings-card {
+    background: #18181b;
+    border-radius: 8px;
+    padding: 56px 0 48px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    border: 1px solid #18181b;
+    margin: 0 14px;
+}
+
+.card-content {
+    text-align: center;
+}
+
+.card-title {
+    color: #fafafa;
+    font-size: 17px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.card-desc {
+    color: #a1a1aa;
+    font-size: 15px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #404040;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    label {
+        color: #ffffff;
+        font-weight: 400;
+        cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: #5b73e8;
+        cursor: pointer;
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 1rem;
+    }
+}

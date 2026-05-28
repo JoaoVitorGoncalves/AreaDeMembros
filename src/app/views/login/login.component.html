@@ -1,0 +1,49 @@
+<div class="login-container">
+    <!-- Logo Million -->
+
+    <div class="logo">
+        <div class="logo-wrapper">
+            <img src="/images/logo.png" alt="Million" class="logo-image">
+        </div>
+    </div>
+    <div class="login-card">
+        <!-- Formulário de Login -->
+        <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+            <div class="form-header">
+                <h2>Acesse sua área de membros</h2>
+            </div>
+
+            <!-- Mensagem de erro -->
+            <div class="error-message" *ngIf="errorMessage" role="alert">
+                <span class="error-icon">⚠️</span>
+                {{ errorMessage }}
+            </div>
+
+            <div class="form-group">
+                <input type="email" id="email" name="email" [(ngModel)]="loginData.email" placeholder="Email do usuário"
+                    required class="form-input" [disabled]="isLoading" (input)="clearError()" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="password" name="password" [(ngModel)]="loginData.password"
+                    placeholder="Senha do usuário" required class="form-input" [disabled]="isLoading"
+                    (input)="clearError()" autocomplete="current-password">
+            </div>
+
+            <div class="form-footer">
+                <a href="#" class="forgot-password" (click)="forgotPassword()" [class.disabled]="isLoading">
+                    Esqueci minha senha
+                </a>
+            </div>
+
+            <button type="submit" class="btn-login" [disabled]="!loginForm.form.valid || isLoading"
+                [class.loading]="isLoading">
+                <span *ngIf="!isLoading">Entrar</span>
+                <span *ngIf="isLoading" class="loading-content">
+                    <span class="spinner"></span>
+                    Entrando...
+                </span>
+            </button>
+        </form>
+    </div>
+</div>

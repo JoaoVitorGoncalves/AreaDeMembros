@@ -1,0 +1,294 @@
+.main-content {
+    margin-left: 220px;
+    margin-top: 60px;
+    padding: 40px;
+    background: #0f0f0f;
+    // min-height: calc(100vh - 60px);
+}
+
+.tools-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #27272A;
+}
+
+.header-text h1 {
+    color: #FAFAFA;
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 4px;
+}
+
+.header-text p {
+    color: #A1A1AA;
+    font-size: 14px;
+    margin: 0;
+}
+
+.btn-add-rule {
+    background-color: #4f46e5;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background-color: #4338ca;
+    }
+}
+
+.tools-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tool-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #27272A;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.tool-item:last-child {
+    border-bottom: none;
+}
+
+.tool-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.tool-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    background-color: #27272A;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.tool-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+}
+
+.tool-icon:hover {
+    transform: scale(1.1);
+}
+
+.tool-details h3 {
+    color: #FAFAFA;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0 0 4px;
+}
+
+.tool-details p {
+    color: #A1A1AA;
+    font-size: 14px;
+    margin: 0;
+}
+
+.btn-access {
+    background-color: transparent;
+    color: #5E87FF;
+    padding: 8px 16px;
+    border-radius: 19.5px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid #3F3F46;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.btn-access:hover {
+    background-color: #27272A;
+    border-color: #52525B;
+}
+
+/* Loading state */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #27272A;
+    border-top: 3px solid #A1A1AA;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-state p {
+    color: #A1A1AA;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Error state */
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.error-state h3 {
+    color: #FAFAFA;
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 8px;
+}
+
+.error-state p {
+    color: #A1A1AA;
+    font-size: 14px;
+    margin: 0 0 24px;
+    max-width: 400px;
+}
+
+.btn-retry {
+    background-color: #EF4444;
+    color: #FAFAFA;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-retry:hover {
+    background-color: #DC2626;
+}
+
+/* Empty state */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    color: #FAFAFA;
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 8px;
+}
+
+.empty-state p {
+    color: #A1A1AA;
+    font-size: 14px;
+    margin: 0 0 24px;
+    max-width: 400px;
+}
+
+.btn-refresh {
+    background-color: #3B82F6;
+    color: #FAFAFA;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-refresh:hover {
+    background-color: #2563EB;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    .tool-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .btn-access {
+        width: 100%;
+        text-align: center;
+    }
+
+    .loading-state,
+    .error-state,
+    .empty-state {
+        padding: 40px 20px;
+    }
+}

@@ -1,0 +1,13 @@
+<div class="multi-select-container" (blur)="onBlur()" tabindex="0">
+    <div class="selected-options" (click)="toggleDropdown()">
+        <span>{{ selectedNames }}</span>
+        <span class="dropdown-arrow">{{ isDropdownOpen ? '▲' : '▼' }}</span>
+    </div>
+    <div class="dropdown-list" *ngIf="isDropdownOpen">
+        <ul>
+            <li *ngFor="let option of options" (click)="selectOption(option)" [class.selected]="isSelected(option)">
+                {{ option.name }}
+            </li>
+        </ul>
+    </div>
+</div>

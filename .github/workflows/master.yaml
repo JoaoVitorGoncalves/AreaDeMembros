@@ -1,0 +1,36 @@
+# on:
+#   push:
+#     branches:
+#       - master
+#   pull_request:
+#     branches:
+#       - master
+# name: 🚀 Deploy Angular App
+# jobs:
+#   build-and-deploy:
+#     name: 🎉 Build and Deploy Angular
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: 🚚 Get latest code
+#         uses: actions/checkout@v3
+
+#       - name: 📦 Set up Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: "20"
+
+#       - name: 📥 Install dependencies
+#         run: npm install
+
+#       - name: 🛠️ Build Angular app
+#         run: npm run build --prod
+
+#       - name: 📂 Deploy to server via FTP
+#         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+#         with:
+#           server: ${{ secrets.SERVER }}
+#           username: ${{ secrets.USERNAME }}
+#           password: ${{ secrets.PASSWORD }}
+#           local-dir: ./dist/million-dash/browser/
+#           server-dir: ${{ secrets.SERVER_DIR }}

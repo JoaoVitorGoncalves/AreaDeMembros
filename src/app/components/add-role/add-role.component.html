@@ -1,0 +1,52 @@
+<div class="modal-overlay" (click)="onClose()"></div>
+<div class="modal-container">
+    <div class="modal-header">
+        <h2>Adicionar curso</h2>
+        <button class="close-btn" (click)="onClose()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <div class="modal-content">
+        <form [formGroup]="roleForm" (ngSubmit)="onSubmit()">
+            <div class="form-container">
+                <div class="form-field">
+                    <label for="name">Nome do curso</label>
+                    <input id="name" type="text" formControlName="name" placeholder="Digite o nome do curso"
+                        (input)="onInputChange()">
+                    <div *ngIf="roleForm.get('name')?.invalid && roleForm.get('name')?.touched" class="field-error">
+                        Nome do curso é obrigatório
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="formato">Formato</label>
+                    <select id="formato" disabled>
+                        <option value="online">Curso online</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="number">Número de suporte</label>
+                    <input id="number" type="text" formControlName="phone" placeholder="(99) 9 9999-9999"
+                        (input)="onInputChange()">
+                </div>
+                <div class="form-field">
+                    <label for="email">Email de suporte</label>
+                    <input id="email" type="email" formControlName="email" placeholder="seu@email.com"
+                        (input)="onInputChange()">
+                </div>
+            </div>
+            <div *ngIf="error" class="error-message">{{ error }}</div>
+            <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+            <div class="modal-actions">
+                <button type="button" class="cancel-btn" (click)="onClose()" [disabled]="isLoading">Cancelar</button>
+                <button type="submit" class="create-btn" [disabled]="roleForm.invalid || isLoading">
+                    <span *ngIf="!isLoading">Continuar</span>
+                    <span *ngIf="isLoading">Salvando...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

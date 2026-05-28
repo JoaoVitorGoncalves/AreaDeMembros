@@ -1,0 +1,80 @@
+<div class="sidebar-overlay" (click)="onClose()"></div>
+<div class="sidebar-container">
+    <header class="sidebar-header">
+        <h2>Adicionar Colaborador</h2>
+        <button class="close-btn" (click)="onClose()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </header>
+
+    <div class="sidebar-content">
+        <form [formGroup]="collaboratorForm" (ngSubmit)="onSubmit()">
+            <div class="form-field">
+                <label for="name">Nome</label>
+                <input id="name" type="text" formControlName="name" placeholder="Nome do colaborador"
+                    (input)="onInputChange()">
+                <div *ngIf="collaboratorForm.get('name')?.invalid && collaboratorForm.get('name')?.touched"
+                    class="field-error">
+                    Nome é obrigatório
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="document">Documento</label>
+                <input id="document" type="text" formControlName="document" placeholder="CPF ou CNPJ"
+                    (input)="onInputChange()">
+                <div *ngIf="collaboratorForm.get('document')?.invalid && collaboratorForm.get('document')?.touched"
+                    class="field-error">
+                    Documento é obrigatório
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="phone">Telefone</label>
+                <input id="phone" type="tel" formControlName="phone" placeholder="(11) 99999-9999"
+                    (input)="onInputChange()">
+                <div *ngIf="collaboratorForm.get('phone')?.invalid && collaboratorForm.get('phone')?.touched"
+                    class="field-error">
+                    Telefone é obrigatório
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="email">Email</label>
+                <input id="email" type="email" formControlName="email" placeholder="Email do colaborador"
+                    (input)="onInputChange()">
+                <div *ngIf="collaboratorForm.get('email')?.invalid && collaboratorForm.get('email')?.touched"
+                    class="field-error">
+                    <span *ngIf="collaboratorForm.get('email')?.errors?.['required']">Email é obrigatório</span>
+                    <span *ngIf="collaboratorForm.get('email')?.errors?.['email']">Email inválido</span>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="password">Senha</label>
+                <input id="password" type="password" formControlName="password" placeholder="Senha do colaborador"
+                    (input)="onInputChange()">
+                <small>Mínimo de 6 caracteres</small>
+                <div *ngIf="collaboratorForm.get('password')?.invalid && collaboratorForm.get('password')?.touched"
+                    class="field-error">
+                    <span *ngIf="collaboratorForm.get('password')?.errors?.['required']">Senha é obrigatória</span>
+                    <span *ngIf="collaboratorForm.get('password')?.errors?.['minlength']">Senha deve ter pelo menos 6
+                        caracteres</span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <div *ngIf="error" class="error-message">{{ error }}</div>
+                <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+                <button type="submit" class="btn-submit" [disabled]="isLoading || collaboratorForm.invalid">
+                    <span *ngIf="!isLoading">Salvar Colaborador</span>
+                    <span *ngIf="isLoading" class="spinner"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

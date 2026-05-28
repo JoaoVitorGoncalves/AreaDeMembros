@@ -1,0 +1,296 @@
+<div class="add-lesson-modal-overlay" (click)="onClose()"></div>
+<div class="add-lesson-modal-container">
+    <div class="add-lesson-modal-header">
+        <span>Nova aula</span>
+        <button class="add-lesson-close-btn" (click)="onClose()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <div class="add-lesson-modal-content">
+        <form [formGroup]="lessonForm" (ngSubmit)="onSubmit()">
+            <div class="add-lesson-form-row">
+                <div class="add-lesson-form-col add-lesson-form-main">
+                    <div class="form-field">
+                        <label class="add-lesson-label">Nome da aula</label>
+                        <input class="add-lesson-input" type="text" formControlName="name"
+                            placeholder="Digite o nome da aula" (input)="onInputChange()"
+                            [class.valid]="lessonForm.get('name')?.valid && lessonForm.get('name')?.value?.trim()"
+                            [class.invalid]="lessonForm.get('name')?.invalid && lessonForm.get('name')?.touched" />
+                        <div *ngIf="lessonForm.get('name')?.invalid && lessonForm.get('name')?.touched"
+                            class="field-error">
+                            <span *ngIf="lessonForm.get('name')?.errors?.['required']">Nome da aula é obrigatório</span>
+                            <span *ngIf="lessonForm.get('name')?.errors?.['maxlength']">Nome deve ter no máximo 150
+                                caracteres</span>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label class="add-lesson-label">Capa do módulo</label>
+                        <div class="add-lesson-upload-area" (dragover)="onVideoDragOver($event)"
+                            (drop)="onVideoDrop($event)" [class.has-video]="videoPreviewUrl"
+                            [class.uploading]="isUploadingVideo"
+                            [class.uploaded]="uploadedVideoUrl && !isUploadingVideo && !videoUploadError"
+                            [class.error]="videoUploadError">
+                            <ng-container *ngIf="!videoPreviewUrl; else videoPreview">
+                                <div class="add-lesson-upload-instructions">
+                                    Você pode inserir uma mídia (vídeo), no tipo: <b style="color: #EFEFEFAD;">mov, mp4,
+                                        avi, mkv, aiff, <br /> mid, wav, mp3.</b> O arquivo pode ter no máximo <b
+                                        style="color: #EFEFEFAD;">1 GB</b>.
+                                </div>
+                                <button type="button" class="add-lesson-upload-btn"
+                                    (click)="lessonVideoInput.click()">Enviar mídia</button>
+                                <input #lessonVideoInput id="lessonVideoInput" type="file" accept="video/*"
+                                    (change)="onVideoSelect($event)" style="display: none;">
+                                <div *ngIf="videoUploadError" class="field-error">{{ videoUploadError }}</div>
+                            </ng-container>
+                            <ng-template #videoPreview>
+                                <div class="video-preview">
+                                    <video *ngIf="videoPreviewUrl" [src]="videoPreviewUrl" controls width="100%"
+                                        height="120"></video>
+                                    <div class="video-info" *ngIf="selectedVideo">{{ selectedVideo.name }}</div>
+                                    <div class="video-actions">
+                                        <!-- <button type="button" class="change-video-btn"
+                                            (click)="lessonVideoInput.click()">Trocar vídeo</button> -->
+                                        <button type="button" class="remove-video-btn"
+                                            (click)="removeVideo()">Remover</button>
+                                    </div>
+                                </div>
+                                <input #lessonVideoInput id="lessonVideoInput" type="file" accept="video/*"
+                                    (change)="onVideoSelect($event)" style="display: none;">
+                                <div *ngIf="videoUploadError" class="field-error">{{ videoUploadError }}</div>
+                            </ng-template>
+                        </div>
+                        <!-- Status do vídeo -->
+                        <div class="video-status" *ngIf="isUploadingVideo || videoUploadError || uploadedVideoUrl">
+                            <div class="status-message uploading" *ngIf="isUploadingVideo">
+                                <div class="upload-info">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7,10 12,15 17,10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                        <span>Fazendo upload do vídeo...</span>
+                                    </div>
+                                    <span class="upload-percentage">{{ uploadProgress }}%</span>
+                                </div>
+                                <div class="upload-progress-bar">
+                                    <div class="upload-progress-fill" [style.width.%]="uploadProgress"></div>
+                                </div>
+                            </div>
+                            <div class="status-message error" *ngIf="videoUploadError">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                                </svg>
+                                {{ videoUploadError }}
+                            </div>
+                            <div class="status-message success"
+                                *ngIf="uploadedVideoUrl && !isUploadingVideo && !videoUploadError">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"></polyline>
+                                </svg>
+                                Vídeo carregado com sucesso
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label class="add-lesson-label">Descrição</label>
+                        <div class="rich-text-editor">
+                            <!-- Toolbar -->
+                            <div class="editor-toolbar">
+                                <button type="button" class="toolbar-btn" [class.active]="isCommandActive('bold')"
+                                    title="Negrito" (click)="formatText('bold')">
+                                    <span class="btn-text">B</span>
+                                </button>
+                                <button type="button" class="toolbar-btn" [class.active]="isCommandActive('italic')"
+                                    title="Itálico" (click)="formatText('italic')">
+                                    <span class="btn-text"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            xmlns:xlink="http://www.w3.org/1999/xlink">
+                                            <rect width="10" height="10" fill="url(#pattern0_2658_167)" />
+                                            <defs>
+                                                <pattern id="pattern0_2658_167" patternContentUnits="objectBoundingBox"
+                                                    width="1" height="1">
+                                                    <use xlink:href="#image0_2658_167" transform="scale(0.00195312)" />
+                                                </pattern>
+                                                <image id="image0_2658_167" width="512" height="512"
+                                                    preserveAspectRatio="none"
+                                                    xlink:href="data:image/png;base64,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" />
+                                            </defs>
+                                        </svg>
+                                    </span>
+                                </button>
+                                <button type="button" class="toolbar-btn"
+                                    [class.active]="isCommandActive('justifyLeft')" title="Alinhar à esquerda"
+                                    (click)="formatText('justifyLeft')">
+                                    <span class="btn-text"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <line y1="0.5" x2="12" y2="0.5" stroke="white" />
+                                            <line y1="8.5" x2="5" y2="8.5" stroke="white" />
+                                            <line y1="4.5" x2="9" y2="4.5" stroke="white" />
+                                        </svg>
+                                    </span>
+                                </button>
+                                <button type="button" class="toolbar-btn"
+                                    [class.active]="isCommandActive('justifyCenter')" title="Alinhar ao centro"
+                                    (click)="formatText('justifyCenter')">
+                                    <span class="btn-text"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <line y1="0.5" x2="12" y2="0.5" stroke="white" />
+                                            <line y1="8.5" x2="12" y2="8.5" stroke="white" />
+                                            <line y1="4.5" x2="12" y2="4.5" stroke="white" />
+                                        </svg>
+                                    </span>
+                                </button>
+                                <button type="button" class="toolbar-btn"
+                                    [class.active]="isCommandActive('justifyRight')" title="Alinhar à direita"
+                                    (click)="formatText('justifyRight')">
+                                    <span class="btn-text"><svg width="11" height="9" viewBox="0 0 11 9" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <line y1="0.5" x2="11" y2="0.5" stroke="white" />
+                                            <line x1="7" y1="8.5" x2="11" y2="8.5" stroke="white" />
+                                            <line x1="3" y1="4.5" x2="11" y2="4.5" stroke="white" />
+                                        </svg>
+                                    </span>
+                                </button>
+                                <button type="button" class="toolbar-btn" title="Inserir link" (click)="insertLink()">
+                                    <span class="btn-text"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_2658_190)">
+                                                <path
+                                                    d="M10.0003 4.66699H12.0003C12.4381 4.66699 12.8715 4.75321 13.2759 4.92073C13.6804 5.08824 14.0478 5.33377 14.3573 5.6433C14.6669 5.95283 14.9124 6.3203 15.0799 6.72471C15.2474 7.12913 15.3337 7.56259 15.3337 8.00033C15.3337 8.43807 15.2474 8.87152 15.0799 9.27594C14.9124 9.68036 14.6669 10.0478 14.3573 10.3573C14.0478 10.6669 13.6804 10.9124 13.2759 11.0799C12.8715 11.2474 12.4381 11.3337 12.0003 11.3337H10.0003M6.00033 11.3337H4.00033C3.56259 11.3337 3.12913 11.2474 2.72471 11.0799C2.3203 10.9124 1.95283 10.6669 1.6433 10.3573C1.01818 9.73223 0.666992 8.88438 0.666992 8.00033C0.666992 7.11627 1.01818 6.26842 1.6433 5.6433C2.26842 5.01818 3.11627 4.66699 4.00033 4.66699H6.00033M5.33366 8.00033H10.667"
+                                                    stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_2658_190">
+                                                    <rect width="16" height="16" fill="white" />
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    </span>
+                                </button>
+                            </div>
+
+                            <!-- Editor content area -->
+                            <div class="editor-content" contenteditable="true" (input)="onEditorInput($event)"
+                                (focus)="onEditorFocus()" (blur)="onEditorBlur()" (mouseup)="forceButtonUpdate()"
+                                (keyup)="forceButtonUpdate()" (selectionchange)="forceButtonUpdate()"
+                                [class.valid]="lessonForm.get('description')?.valid && lessonForm.get('description')?.value?.trim()"
+                                [class.invalid]="lessonForm.get('description')?.invalid && lessonForm.get('description')?.touched">
+                            </div>
+                        </div>
+
+                        <div *ngIf="lessonForm.get('description')?.invalid && lessonForm.get('description')?.touched"
+                            class="field-error">
+                            <span *ngIf="lessonForm.get('description')?.errors?.['maxlength']">Descrição deve ter no
+                                máximo 500 caracteres</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="add-lesson-form-col add-lesson-form-thumb">
+                    <div class="form-field">
+                        <label class="add-lesson-label">Miniatura da Aula</label>
+                        <div class="add-lesson-thumb-box" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
+                            [class.has-image]="imagePreviewUrl" [class.uploading]="isUploadingImage"
+                            [class.uploaded]="uploadedImageUrl && !isUploadingImage && !imageUploadError"
+                            [class.error]="imageUploadError">
+                            <ng-container *ngIf="!imagePreviewUrl; else imagePreview">
+                                <div class="upload-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                        <polyline points="21,15 16,10 5,21"></polyline>
+                                    </svg>
+                                </div>
+                                <button type="button" class="add-lesson-thumb-btn"
+                                    (click)="lessonFileInput.click()">Adicionar imagem</button>
+                                <input #lessonFileInput id="lessonFileInput" type="file" accept="image/*"
+                                    (change)="onImageSelect($event)" style="display: none;">
+                                <div *ngIf="imageUploadError" class="field-error">{{ imageUploadError }}</div>
+                            </ng-container>
+                            <ng-template #imagePreview>
+                                <div class="image-preview">
+                                    <img [src]="imagePreviewUrl" alt="Preview da imagem" />
+                                    <div class="image-actions">
+                                        <!-- <button type="button" class="change-image-btn"
+                                            (click)="lessonFileInput.click()">Trocar imagem</button> -->
+                                        <button type="button" class="remove-image-btn"
+                                            (click)="removeImage()">Remover</button>
+                                    </div>
+                                </div>
+                                <input #lessonFileInput id="lessonFileInput" type="file" accept="image/*"
+                                    (change)="onImageSelect($event)" style="display: none;">
+                                <div *ngIf="imageUploadError" class="field-error">{{ imageUploadError }}</div>
+                            </ng-template>
+                        </div>
+                        <!-- Status da imagem -->
+                        <div class="image-status" *ngIf="isUploadingImage || imageUploadError || uploadedImageUrl">
+                            <div class="status-message uploading" *ngIf="isUploadingImage">
+                                <div class="upload-info" style="justify-content: flex-start; gap: 8px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7,10 12,15 17,10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    <span>Fazendo upload da imagem...</span>
+                                </div>
+                            </div>
+                            <div class="status-message error" *ngIf="imageUploadError">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                                </svg>
+                                {{ imageUploadError }}
+                            </div>
+                            <div class="status-message success"
+                                *ngIf="uploadedImageUrl && !isUploadingImage && !imageUploadError">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12"></polyline>
+                                </svg>
+                                Imagem carregada com sucesso
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <!-- <div *ngIf="error" class="error-message">
+                {{ error }}
+            </div>
+
+            <div *ngIf="successMessage" class="success-message">
+                {{ successMessage }}
+            </div> -->
+
+            <!-- Action Buttons -->
+            <div class="add-lesson-footer">
+                <button type="button" class="add-lesson-cancel-btn" (click)="onClose()" [disabled]="isLoading">
+                    Cancelar
+                </button>
+                <button type="submit" class="add-lesson-publish-btn" [disabled]="!isFormValid"
+                    [title]="getButtonTooltip()">
+                    <span *ngIf="!isLoading">Publicar Aula</span>
+                    <span *ngIf="isLoading">Publicando...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

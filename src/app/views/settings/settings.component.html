@@ -1,0 +1,25 @@
+<app-header></app-header>
+<app-sidebar></app-sidebar>
+
+<main class="main-content">
+    <div class="settings-main">
+        <div class="settings-content">
+            <h1 class="settings-title">Configurações</h1>
+            <div class="settings-subtitle">Gerencie seus dados pessoais, endereço e assinatura</div>
+
+            <div class="settings-tabs">
+                <div class="tab" *ngFor="let tab of tabs; let i = index" [class.active]="activeTab === i"
+                    (click)="setActiveTab(i)">
+                    {{ tab }}
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <div class="card-content">
+                    <div class="card-title">Disponível em breve</div>
+                    <div class="card-desc">Estamos construindo a aba de integrações.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>

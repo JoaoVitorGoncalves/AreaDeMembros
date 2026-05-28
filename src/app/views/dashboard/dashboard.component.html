@@ -1,0 +1,199 @@
+<app-header></app-header>
+<app-sidebar></app-sidebar>
+
+<main class="main-content">
+    <div class="dashboard-container">
+        <!-- Admin Cargo Detail View -->
+        <ng-container *ngIf="selectedCargo; else dashboardMain">
+            <app-admin-cargo-detail class="admin-cargo-detail-container" [cargo]="selectedCargo"
+                (close)="closeCargoDetail()" (cargoUpdated)="onCargoUpdated($event)"></app-admin-cargo-detail>
+        </ng-container>
+        <ng-template #dashboardMain>
+            <!-- Admin Dashboard View -->
+            <ng-container *ngIf="isAdmin; else userDashboard">
+                <div class="admin-dashboard-bg">
+                    <div class="admin-dashboard-header">
+                        <div style="display: flex;flex-direction: column;gap: 8px;">
+                            <h3 class="admin-dashboard-title">Meus Cursos</h3>
+                            <span class="admin-dashboard-progress">
+                                {{ rolesCountExcluindoAdmin }}<ng-container *ngIf="rolesCountExcluindoAdmin <= 10">
+                                    de 10</ng-container> cursos adicionados
+                            </span>
+                        </div>
+                        <button class="admin-dashboard-add-btn" (click)="showAddRoleSidebar()">Adicionar curso</button>
+                    </div>
+                    <ng-container *ngIf="roles$ | async as rolesResult">
+                        <div *ngFor="let cargo of rolesResult.roles; let i = index" class="admin-dashboard-card">
+                            <div class="admin-dashboard-card-info">
+                                <span class="admin-dashboard-card-type">Curso online</span>
+                                <h4 class="admin-dashboard-card-title">{{ cargo.name }}</h4>
+                                <div class="admin-dashboard-card-badges">
+                                    <span class="admin-dashboard-card-badge"
+                                        [ngClass]="cargo.active ? 'admin-dashboard-card-badge-active' : 'admin-dashboard-card-badge-inactive'">
+                                        {{ cargo.active ? 'Ativo' : 'Inativo' }}
+                                    </span>
+                                    <span class="admin-dashboard-card-badge-users">
+                                        {{ cargo.users_count || 0 }} {{ (cargo.users_count || 0) === 1 ? 'usuário' :
+                                        'usuários' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="admin-dashboard-card-actions">
+                                <span class="admin-dashboard-card-action">
+                                    <span class="material-icons admin-dashboard-card-action-icon"><svg width="16"
+                                            height="16" viewBox="0 0 16 16" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_2332_590)">
+                                                <path
+                                                    d="M0.666992 8.00033C0.666992 8.00033 3.33366 2.66699 8.00033 2.66699C12.667 2.66699 15.3337 8.00033 15.3337 8.00033C15.3337 8.00033 12.667 13.3337 8.00033 13.3337C3.33366 13.3337 0.666992 8.00033 0.666992 8.00033Z"
+                                                    stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                                <path
+                                                    d="M8.00033 10.0003C9.10489 10.0003 10.0003 9.10489 10.0003 8.00033C10.0003 6.89576 9.10489 6.00033 8.00033 6.00033C6.89576 6.00033 6.00033 6.89576 6.00033 8.00033C6.00033 9.10489 6.89576 10.0003 8.00033 10.0003Z"
+                                                    stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_2332_590">
+                                                    <rect width="16" height="16" fill="white" />
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    </span> Visualizar
+                                </span>
+                                <span class="admin-dashboard-card-action" (click)="openCargoDetail(cargo)">
+                                    <span class="material-icons admin-dashboard-card-action-icon"><svg width="16"
+                                            height="16" viewBox="0 0 16 16" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_2332_598)">
+                                                <path
+                                                    d="M7.33301 2.66714H2.66634C2.31272 2.66714 1.97358 2.80762 1.72353 3.05767C1.47348 3.30772 1.33301 3.64685 1.33301 4.00048V13.3338C1.33301 13.6874 1.47348 14.0266 1.72353 14.2766C1.97358 14.5267 2.31272 14.6671 2.66634 14.6671H11.9997C12.3533 14.6671 12.6924 14.5267 12.9425 14.2766C13.1925 14.0266 13.333 13.6874 13.333 13.3338V8.66714M12.333 1.66714C12.5982 1.40193 12.9579 1.25293 13.333 1.25293C13.7081 1.25293 14.0678 1.40193 14.333 1.66714C14.5982 1.93236 14.7472 2.29207 14.7472 2.66714C14.7472 3.04222 14.5982 3.40193 14.333 3.66714L7.99967 10.0005L5.33301 10.6671L5.99967 8.00048L12.333 1.66714Z"
+                                                    stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_2332_598">
+                                                    <rect width="16" height="16" fill="white" />
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    </span> Editar
+                                </span>
+                                <div style="position: relative;">
+                                    <span class="admin-dashboard-card-action-more"
+                                        (click)="showCargoActionsDropdown(i, $event)">&#8942;</span>
+                                    <div *ngIf="dropdownCargoIndex === i" class="dropdown-menu"
+                                        (click)="$event.stopPropagation()">
+                                        <div class="dropdown-menu-item"
+                                            (click)="onDeleteCargo(cargo); $event.stopPropagation()">
+                                            <span class="dropdown-menu-item-icon">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                                    <path
+                                                        d="M2 4H14M6 7V11M10 7V11M3 4V14C3 14.5523 3.44772 15 4 15H12C12.5523 15 13 14.5523 13 14V4"
+                                                        stroke="#FF4D4F" stroke-width="1.6" stroke-linecap="round"
+                                                        stroke-linejoin="round" />
+                                                </svg>
+                                            </span>
+                                            Excluir
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+                </div>
+            </ng-container>
+            <!-- User Dashboard View (default) -->
+            <ng-template #userDashboard>
+                <!-- Welcome Section -->
+                <div class="welcome-section">
+                    <div class="welcome-content">
+                        <div class="welcome-icon">🔥</div>
+                        <div class="welcome-text">
+                            <h1>Bem-vindo(a) a sua área de membros, {{ currentUser?.name }}!</h1>
+                            <p>Aqui você terá acesso a um treinamento completo e direto ao ponto, com tudo que você
+                                precisa
+                                para
+                                dominar a {{ userRole }}.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Modules Section -->
+                <div class="modules-section">
+                    <h2>Módulos</h2>
+                    <div *ngIf="loading$ | async; else modulesContent" class="loading-spinner">
+                        <!-- You can replace this with a more sophisticated spinner component -->
+                        <p style="color: #fff;">Carregando módulos...</p>
+                    </div>
+
+                    <ng-template #modulesContent>
+                        <div *ngIf="(modules$ | async) as modules">
+                            <div *ngIf="modules.length > 0; else noModules" class="modules-grid">
+                                <div class="module-item" *ngFor="let module of modules" (click)="openModule(module)">
+                                    <div class="module-card">
+                                        <img [src]="module.thumbnail_url" [alt]="module.name">
+                                        <div class="module-overlay">
+                                            <div class="play-icon">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 5V19L19 12L8 5Z" fill="#fff" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="module-info">
+                                        <h3>{{ module.name }}</h3>
+                                        <!-- <p class="status" [ngClass]="module.status">
+                                            <svg *ngIf="module.status === 'completed'"
+                                                xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round" class="check-icon">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                            <span *ngIf="module.status === 'completed'">Concluído</span>
+                                            <span *ngIf="module.status === 'progress'">Progresso {{ module.progress
+                                                }}%</span>
+                                        </p> -->
+                                    </div>
+                                </div>
+                            </div>
+                            <ng-template #noModules>
+                                <div class="no-modules-message">
+                                    <p>Nenhum módulo disponível para o seu curso no momento.</p>
+                                </div>
+                            </ng-template>
+                        </div>
+                    </ng-template>
+                </div>
+
+                <!-- Continue Progress Section -->
+                <div class="progress-section" *ngIf="lessonsInProgress.length > 0">
+                    <h2>Continuar progresso</h2>
+                    <div class="progress-grid">
+                        <div class="progress-card" *ngFor="let item of lessonsInProgress">
+                            <div class="video-thumbnail" (click)="continuarAula(item.module, item.lesson)">
+                                <img [src]="item.lesson.thumbnail_url || '/images/thumbnail.jpg'" alt=""
+                                    style="width: 100%;height: 100%;">
+                                <div class="play-button">▶</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" [style.width.%]="item.progress"></div>
+                                </div>
+                            </div>
+                            <div class="video-info">
+                                <h4>{{ item.lesson.name }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-section" *ngIf="lessonsInProgress.length === 0">
+                    <h2>Continuar progresso</h2>
+                    <p style="color: #A1A1AA; padding: 24px;">Você ainda não iniciou nenhuma aula!</p>
+                </div>
+            </ng-template>
+        </ng-template>
+    </div>
+</main>
+
+<!-- Add Role Sidebar -->
+<app-add-role *ngIf="showAddRoleSidebarFlag" (close)="hideAddRoleSidebar()" (roleCreated)="onRoleCreated($event)">
+</app-add-role>

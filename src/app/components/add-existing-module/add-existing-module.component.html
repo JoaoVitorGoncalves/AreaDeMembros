@@ -1,0 +1,70 @@
+<div class="modal-overlay" (click)="onClose()"></div>
+
+<!-- Modal de loading -->
+<div *ngIf="loading" class="modal-container add-existing-module-modal-container"
+    style="display: flex; align-items: center; justify-content: center; min-height: 300px;">
+    <div style="text-align:center; color:#A1A1AA; margin: 32px 0; width: 100%;">Carregando módulos...</div>
+</div>
+
+<!-- Modal de erro -->
+<div *ngIf="!loading && error" class="modal-container add-existing-module-modal-container"
+    style="display: flex; align-items: center; justify-content: center; min-height: 300px;">
+    <div style="text-align:center; color:#EF4444; margin: 32px 0; width: 100%;">{{ error }}</div>
+</div>
+
+<!-- Modal principal -->
+<div *ngIf="!loading && !error" class="modal-container add-existing-module-modal-container">
+    <div class="add-existing-module-modal-header">
+        <span class="add-existing-module-modal-title">Adicionar módulo existente</span>
+    </div>
+    <hr class="add-existing-module-modal-divider" />
+    <div class="add-existing-module-modal-search-row">
+        <input class="add-existing-module-modal-search-input" type="text" [(ngModel)]="searchTerm"
+            placeholder="Buscar por nome ou descrição do módulo" />
+        <span class="add-existing-module-modal-search-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M16 16L13 13M14.5 8.25C14.5 11.5637 11.5637 14.5 8.25 14.5C4.93629 14.5 2 11.5637 2 8.25C2 4.93629 4.93629 2 8.25 2C11.5637 2 14.5 4.93629 14.5 8.25Z"
+                    stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </span>
+        <button class="add-existing-module-modal-search-btn" disabled>Buscar</button>
+    </div>
+    <div class="add-existing-module-modal-list-header">
+        <span>Módulos ({{ filteredModules.length }})</span>
+        <span class="add-existing-module-modal-select-all" (click)="selectAll()">Selecionar todos</span>
+    </div>
+    <div class="add-existing-module-modal-list">
+        <ng-container *ngIf="filteredModules.length > 0; else emptyState">
+            <div *ngFor="let module of filteredModules" class="add-existing-module-modal-card"
+                [class.selected]="isSelected(module.id)" (click)="toggleSelect(module.id)">
+                <div class="add-existing-module-modal-card-info">
+                    <span class="add-existing-module-modal-card-icon">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="32" height="32" rx="6" fill="#4C4C4C" />
+                            <path d="M8 12H24M8 16H24M8 20H20" stroke="#EFEFEF" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </span>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <div class="add-existing-module-modal-card-title">{{ module.name }}</div>
+                        <div class="add-existing-module-modal-card-badges">
+                            <!-- <span class="add-existing-module-modal-card-content">{{ module.description || 'Sem descrição' }}</span> -->
+                        </div>
+                    </div>
+                </div>
+                <input type="checkbox" class="add-existing-module-modal-checkbox" [checked]="isSelected(module.id)"
+                    (change)="toggleSelect(module.id)" />
+            </div>
+        </ng-container>
+        <ng-template #emptyState>
+            <div style="text-align:center; color:#A1A1AA; margin: 32px 0;">Nenhum módulo encontrado.</div>
+        </ng-template>
+    </div>
+    <div class="add-existing-module-modal-footer">
+        <button class="add-existing-module-modal-cancel-btn" (click)="onClose()">Cancelar</button>
+        <button class="add-existing-module-modal-add-btn" [disabled]="selectedIds.size === 0"
+            (click)="onAdd()">Adicionar
+            módulos ({{ selectedIds.size }})</button>
+    </div>
+</div>

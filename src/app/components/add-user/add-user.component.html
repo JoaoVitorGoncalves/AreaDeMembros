@@ -1,0 +1,77 @@
+<div class="modal-overlay" (click)="onClose()"></div>
+<div class="modal-container">
+    <div class="modal-header">
+        <h2>Adicionar usuário</h2>
+        <button class="close-btn" (click)="onClose()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <div class="modal-content">
+        <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+            <div class="form-container">
+                <div class="form-field">
+                    <label for="name">Nome completo</label>
+                    <input id="name" type="text" formControlName="name" placeholder="Nome completo"
+                        (input)="onInputChange()">
+                    <div *ngIf="userForm.get('name')?.invalid && userForm.get('name')?.touched" class="field-error">
+                        Nome é obrigatório
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="email">Email</label>
+                    <input id="email" type="email" formControlName="email" placeholder="Email"
+                        (input)="onInputChange()">
+                    <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="field-error">
+                        <span *ngIf="userForm.get('email')?.errors?.['required']">Email é obrigatório</span>
+                        <span *ngIf="userForm.get('email')?.errors?.['email']">Email inválido</span>
+                    </div>
+                </div>
+                <div class="form-field" style="display: flex; gap: 16px; flex-direction: row;">
+                    <div style="width: 50%;display: flex;flex-direction: column;">
+                        <label for="phone">Telefone</label>
+                        <input id="phone" type="tel" formControlName="phone" placeholder="Telefone"
+                            (input)="onInputChange()">
+                        <div *ngIf="userForm.get('phone')?.invalid && userForm.get('phone')?.touched"
+                            class="field-error">
+                            Telefone é obrigatório
+                        </div>
+                    </div>
+                    <div style="width: 50%;display: flex;flex-direction: column;">
+                        <label for="document">CPF/CNPJ</label>
+                        <input id="document" type="text" formControlName="document" placeholder="CPF/CNPJ"
+                            (input)="onInputChange()">
+                        <div *ngIf="userForm.get('document')?.invalid && userForm.get('document')?.touched"
+                            class="field-error">
+                            Documento é obrigatório
+                        </div>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="password">Senha</label>
+                    <input id="password" type="password" formControlName="password" placeholder="Senha"
+                        (input)="onInputChange()">
+                    <!-- <small>Mínimo de 6 caracteres</small> -->
+                    <div *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched"
+                        class="field-error">
+                        <span *ngIf="userForm.get('password')?.errors?.['required']">Senha é obrigatória</span>
+                        <span *ngIf="userForm.get('password')?.errors?.['minlength']">Senha deve ter pelo menos 6
+                            caracteres</span>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="error" class="error-message">{{ error }}</div>
+            <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+            <div class="modal-actions">
+                <button type="button" class="cancel-btn" (click)="onClose()" [disabled]="isLoading">Cancelar</button>
+                <button type="submit" class="create-btn" [disabled]="isLoading || userForm.invalid">
+                    <span *ngIf="!isLoading">Criar usuário</span>
+                    <span *ngIf="isLoading">Criando...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

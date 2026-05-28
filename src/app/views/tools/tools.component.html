@@ -1,0 +1,64 @@
+<app-header></app-header>
+<app-sidebar></app-sidebar>
+
+<div class="main-content">
+    <div class="tools-container">
+        <div class="page-header" *ngIf="!error && !(loading$ | async) && !hasNoToolsForUser">
+            <div class="header-text">
+                <h1>Ferramentas/Apps</h1>
+                <p>Acesse todas as ferramentas ou apps utilizadas nas aulas</p>
+            </div>
+        </div>
+
+        <!-- Loading state -->
+        <div *ngIf="loading$ | async" class="loading-state">
+            <div class="spinner"></div>
+            <p>Carregando ferramentas...</p>
+        </div>
+
+        <!-- Error state -->
+        <div *ngIf="error && !(loading$ | async)" class="error-state">
+            <div class="error-icon">⚠️</div>
+            <h3>Erro ao carregar ferramentas</h3>
+            <p>{{ error }}</p>
+            <button (click)="retryLoad()" class="btn-retry">Tentar novamente</button>
+        </div>
+
+        <!-- Tools list -->
+        <div *ngIf="!error && !(loading$ | async)" class="tools-list">
+            <div *ngFor="let tool of tools; trackBy: trackByTool" class="tool-item">
+                <div class="tool-info">
+                    <div class="tool-icon-wrapper">
+                        <img [src]="tool.image_url" [alt]="tool.name" class="tool-icon" loading="lazy">
+                    </div>
+                    <div class="tool-details">
+                        <h3>{{ tool.name }}</h3>
+                        <p>{{ tool.description }}</p>
+                    </div>
+                </div>
+                <a [href]="tool.link" target="_blank" rel="noopener noreferrer" class="btn-access">
+                    Acessar
+                </a>
+            </div>
+        </div>
+
+        <!-- Empty state - No tools for user -->
+        <div *ngIf="!error && !(loading$ | async) && hasNoToolsForUser" class="empty-state">
+            <div class="empty-icon">🔒</div>
+            <h3>Ainda não há ferramentas para você</h3>
+            <p>Você ainda não tem acesso a nenhuma ferramenta no momento.</p>
+            <button (click)="refreshTools()" class="btn-refresh">Recarregar</button>
+        </div>
+
+        <!-- Empty state - No tools found -->
+        <div *ngIf="!error && !(loading$ | async) && !hasNoToolsForUser && tools.length === 0" class="empty-state">
+            <div class="empty-icon">📦</div>
+            <h3>Nenhuma ferramenta encontrada</h3>
+            <p>Não há ferramentas disponíveis no momento.</p>
+            <button (click)="refreshTools()" class="btn-refresh">Recarregar</button>
+        </div>
+    </div>
+</div>
+
+<app-add-tool *ngIf="isAddToolSidebarVisible" (close)="onSidebarClose()" (toolCreated)="onToolCreated($event)">
+</app-add-tool>

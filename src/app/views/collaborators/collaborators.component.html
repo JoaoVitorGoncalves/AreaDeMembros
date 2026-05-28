@@ -1,0 +1,108 @@
+<app-header></app-header>
+<app-sidebar></app-sidebar>
+
+<main class="main-content">
+    <div class="collaborators-container">
+        <div class="collaborators-content">
+            <div class="header">
+                <h1>Colaboradores</h1>
+                <p>Gerencie os administradores colaboradores do projeto</p>
+            </div>
+
+            <div class="actions">
+                <div class="search-filter">
+                    <input type="text" placeholder="Buscar por nome ou email">
+                    <select>
+                        <option>Todos os colaboradores</option>
+                        <option>Administradores</option>
+                        <option>Editores</option>
+                    </select>
+                    <button class="filter-btn">Filtrar</button>
+                </div>
+                <button class="add-collaborator-btn" *ngIf="isAdmin" (click)="openAddSidebar()">+ Adicionar
+                    Colaborador</button>
+                <!-- <button class="refresh-btn" *ngIf="isAdmin" (click)="refreshCollaborators()">Recarregar</button> -->
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="error" class="error-state">
+                <p>{{ error }}</p>
+                <button (click)="retryLoad()" class="retry-btn">Tentar Novamente</button>
+            </div>
+
+            <!-- Loading State -->
+            <ng-container *ngIf="loading$ | async; else collaboratorsTable">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Carregando colaboradores...</p>
+                </div>
+            </ng-container>
+
+            <!-- Collaborators Table -->
+            <ng-template #collaboratorsTable>
+                <div class="collaborators-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome e Email</th>
+                                <!-- <th>Último acesso</th>
+                            <th>Função</th>
+                            <th>Status</th>
+                            <th>Permissões</th> -->
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let collaborator of collaborators; trackBy: trackByCollaborator">
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar">{{ collaborator.name | slice:0:1 }}</div>
+                                        <div class="name-email">
+                                            <div class="name">{{ collaborator.name }}</div>
+                                            <div class="email">{{ collaborator.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <!-- <td>{{ collaborator.last_access | date:'dd/MM/yyyy HH:mm' }}</td>
+                            <td>
+                                <span class="role-badge" [class]="'role-' + collaborator.role.toLowerCase()">
+                                    {{ collaborator.role }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge" [class]="'status-' + collaborator.status.toLowerCase()">
+                                    {{ collaborator.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="permissions">
+                                    <span *ngFor="let permission of collaborator.permissions" class="permission-tag">
+                                        {{ permission }}
+                                    </span>
+                                </div>
+                            </td> -->
+                                <td>
+                                    <div class="actions-menu">
+                                        <button class="menu-btn">...</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty State -->
+                    <div *ngIf="collaborators.length === 0 && !error" class="empty-state">
+                        <p>Nenhum colaborador encontrado</p>
+                        <button *ngIf="isAdmin" (click)="openAddSidebar()" class="add-first-btn">
+                            Adicionar Primeiro Colaborador
+                        </button>
+                    </div>
+                </div>
+            </ng-template>
+        </div>
+    </div>
+
+    <app-add-collaborator *ngIf="showAddSidebar" (close)="closeAddSidebar()"
+        (collaboratorCreated)="onCollaboratorCreated($event)">
+    </app-add-collaborator>
+</main>

@@ -1,0 +1,65 @@
+<div class="modal-overlay" (click)="onClose()"></div>
+
+<!-- Modal de loading -->
+<div *ngIf="loading" class="modal-container add-existing-user-modal-container"
+    style="display: flex; align-items: center; justify-content: center; min-height: 300px;">
+    <div style="text-align:center; color:#A1A1AA; margin: 32px 0; width: 100%;">Carregando usuários...</div>
+</div>
+
+<!-- Modal de erro -->
+<div *ngIf="!loading && error" class="modal-container add-existing-user-modal-container"
+    style="display: flex; align-items: center; justify-content: center; min-height: 300px;">
+    <div style="text-align:center; color:#EF4444; margin: 32px 0; width: 100%;">{{ error }}</div>
+</div>
+
+<!-- Modal principal -->
+<div *ngIf="!loading && !error" class="modal-container add-existing-user-modal-container">
+    <div class="add-existing-user-modal-header">
+        <span class="add-existing-user-modal-title">Adicionar usuário existente</span>
+    </div>
+    <hr class="add-existing-user-modal-divider" />
+    <div class="add-existing-user-modal-search-row">
+        <input class="add-existing-user-modal-search-input" type="text" [(ngModel)]="searchTerm"
+            placeholder="Buscar por nome ou email do usuário" />
+        <span class="add-existing-user-modal-search-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M16 16L13 13M14.5 8.25C14.5 11.5637 11.5637 14.5 8.25 14.5C4.93629 14.5 2 11.5637 2 8.25C2 4.93629 4.93629 2 8.25 2C11.5637 2 14.5 4.93629 14.5 8.25Z"
+                    stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </span>
+        <button class="add-existing-user-modal-search-btn" disabled>Buscar</button>
+    </div>
+    <div class="add-existing-user-modal-list-header">
+        <span>Usuários ({{ filteredUsers.length }})</span>
+        <span class="add-existing-user-modal-select-all" (click)="selectAll()">Selecionar todos</span>
+    </div>
+    <div class="add-existing-user-modal-list">
+        <ng-container *ngIf="filteredUsers.length > 0; else emptyState">
+            <div *ngFor="let user of filteredUsers" class="add-existing-user-modal-card"
+                [class.selected]="isSelected(user.id)" (click)="toggleSelect(user.id)">
+                <div class="add-existing-user-modal-card-info">
+                    <span class="cargo-users-avatar" [style.background]="getAvatarColor(user.id)">
+                        {{ getInitials(user.name) }}
+                    </span>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <div class=" add-existing-user-modal-card-title">{{ user.name }}</div>
+                        <div class="add-existing-user-modal-card-badges">
+                            <span class="add-existing-user-modal-card-content">{{ user.email }}</span>
+                        </div>
+                    </div>
+                </div>
+                <input type="checkbox" class="add-existing-user-modal-checkbox" [checked]="isSelected(user.id)"
+                    (change)="toggleSelect(user.id)" />
+            </div>
+        </ng-container>
+        <ng-template #emptyState>
+            <div style="text-align:center; color:#A1A1AA; margin: 32px 0;">Nenhum usuário encontrado.</div>
+        </ng-template>
+    </div>
+    <div class="add-existing-user-modal-footer">
+        <button class="add-existing-user-modal-cancel-btn" (click)="onClose()">Cancelar</button>
+        <button class="add-existing-user-modal-add-btn" [disabled]="selectedIds.size === 0" (click)="onAdd()">Adicionar
+            usuários ({{ selectedIds.size }})</button>
+    </div>
+</div>

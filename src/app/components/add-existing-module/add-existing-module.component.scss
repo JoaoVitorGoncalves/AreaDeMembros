@@ -1,0 +1,206 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1B1B1B;
+    border-radius: 12px;
+    z-index: 1001;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+}
+
+.add-existing-module-modal-container {
+    width: 90%;
+    // max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.add-existing-module-modal-header {
+    padding: 24px 24px 0 24px;
+}
+
+.add-existing-module-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.add-existing-module-modal-divider {
+    margin: 16px 24px 0 24px;
+    border: none;
+    height: 1px;
+    background: #2C2C2C;
+}
+
+.add-existing-module-modal-search-row {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.add-existing-module-modal-search-input {
+    flex: 1;
+    background: #2C2C2C47;
+    border: 1px solid #FFFFFF17;
+    border-radius: 6px;
+    padding: 10px 38px 10px 14px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+}
+
+.add-existing-module-modal-search-icon {
+    // position: absolute;
+    // left: 36px;
+    // top: 50%;
+    // transform: translateY(-50%);
+    color: #a1a1aa;
+    pointer-events: none;
+}
+
+.add-existing-module-modal-search-btn {
+    background: #202020;
+    color: #a1a1aa;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.add-existing-module-modal-list-header {
+    padding: 0 24px 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #a1a1aa;
+    font-size: 14px;
+}
+
+.add-existing-module-modal-select-all {
+    color: #5E74FF;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.add-existing-module-modal-select-all:hover {
+    color: #4053b7;
+}
+
+.add-existing-module-modal-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 24px;
+    max-height: 400px;
+}
+
+.add-existing-module-modal-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: #30303059;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 2px solid transparent;
+}
+
+.add-existing-module-modal-card:hover {
+    background: #23232A;
+}
+
+.add-existing-module-modal-card.selected {
+    border-color: #5E74FF;
+}
+
+.add-existing-module-modal-card-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.add-existing-module-modal-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-existing-module-modal-card-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.add-existing-module-modal-card-badges {
+    display: flex;
+    gap: 6px;
+}
+
+.add-existing-module-modal-card-content {
+    font-size: 13px;
+    color: #a1a1aa;
+}
+
+.add-existing-module-modal-checkbox {
+    accent-color: #5E74FF;
+    width: 16px;
+    height: 16px;
+}
+
+.add-existing-module-modal-footer {
+    padding: 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid #2C2C2C;
+}
+
+.add-existing-module-modal-cancel-btn {
+    background: transparent;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.add-existing-module-modal-add-btn {
+    background: #5E74FF;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.add-existing-module-modal-add-btn:hover {
+    background: #4053b7;
+}
+
+.add-existing-module-modal-add-btn:disabled {
+    background: #27272A;
+    color: #a1a1aa;
+    cursor: not-allowed;
+}
