@@ -1,7 +1,20 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import {
+    HttpClient,
+    HttpParams,
+    HttpErrorResponse,
+} from '@angular/common/http';
 import { Observable, BehaviorSubject, of, throwError, timer } from 'rxjs';
-import { catchError, map, shareReplay, tap, finalize, retryWhen, delayWhen, filter } from 'rxjs/operators';
+import {
+    catchError,
+    map,
+    shareReplay,
+    tap,
+    finalize,
+    retryWhen,
+    delayWhen,
+    filter,
+} from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 
@@ -71,7 +84,7 @@ interface ModulesApiResponse {
 }
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class ModuleService {
     private readonly API_URL = `${environment.apiUrl}/api/v1/modules`;
@@ -80,7 +93,10 @@ export class ModuleService {
     private readonly RETRY_DELAY = 1000;
 
     // Cache por cargo usando Map
-    private modulesCache = new Map<string, { data: Module[]; timestamp: number }>();
+    private modulesCache = new Map<
+        string,
+        { data: Module[]; timestamp: number }
+    >();
     public modulesSubject = new BehaviorSubject<Module[]>([]);
     public modules$ = this.modulesSubject.asObservable();
     private loadingSubject = new BehaviorSubject<boolean>(false);
@@ -88,7 +104,7 @@ export class ModuleService {
 
     constructor(
         private http: HttpClient,
-        private authService: AuthService
+        private authService: AuthService,
     ) { }
 
     loadModules(): Observable<Module[]> {
@@ -113,53 +129,67 @@ export class ModuleService {
         const params = new HttpParams().set('role', userRole);
 
         return this.http.get<ModulesApiResponse>(this.API_URL, { params }).pipe(
-            retryWhen(errors =>
+            retryWhen((errors) =>
                 errors.pipe(
                     delayWhen(() => timer(this.RETRY_DELAY)),
-                    tap(error => console.warn(`Tentativa de buscar módulos falhou: ${error.message}`)),
+                    tap((error) =>
+                        console.warn(
+                            `Tentativa de buscar módulos falhou: ${error.message}`,
+                        ),
+                    ),
                     map((error, index) => {
                         if (index >= this.MAX_RETRIES - 1) {
                             throw error;
                         }
                         return error;
-                    })
-                )
+                    }),
+                ),
             ),
-            map(response => {
-                if (response && response.success && Array.isArray(response.data.modules)) {
-                    const modules = response.data.modules.map((apiModule: ApiModule): Module => {
-                        return {
-                            id: apiModule.id,
-                            name: apiModule.name,
-                            thumbnail_url: apiModule.image_path,
-                            lessons: apiModule.lessons?.map(lesson => ({
-                                id: lesson.id,
-                                uuid: lesson.uuid,
-                                name: lesson.name,
-                                description: lesson.description,
-                                thumbnail_url: lesson.thumbnail_url,
-                                video_url: lesson.video_url,
-                                created_at: lesson.created_at,
-                                updated_at: lesson.updated_at,
-                                deleted_at: lesson.deleted_at,
-                                pivot: lesson.pivot
-                            })) || []
-                        };
-                    });
+            map((response) => {
+                if (
+                    response &&
+                    response.success &&
+                    Array.isArray(response.data.modules)
+                ) {
+                    const modules = response.data.modules.map(
+                        (apiModule: ApiModule): Module => {
+                            return {
+                                id: apiModule.id,
+                                name: apiModule.name,
+                                thumbnail_url: apiModule.image_path,
+                                lessons:
+                                    apiModule.lessons?.map((lesson) => ({
+                                        id: lesson.id,
+                                        uuid: lesson.uuid,
+                                        name: lesson.name,
+                                        description: lesson.description,
+                                        thumbnail_url: lesson.thumbnail_url,
+                                        video_url: lesson.video_url,
+                                        created_at: lesson.created_at,
+                                        updated_at: lesson.updated_at,
+                                        deleted_at: lesson.deleted_at,
+                                        pivot: lesson.pivot,
+                                    })) || [],
+                            };
+                        },
+                    );
                     return modules;
                 }
                 console.warn('⚠️ Resposta da API inválida ou sem módulos');
                 return [];
             }),
-            tap(modules => {
-                this.modulesCache.set(cacheKey, { data: modules, timestamp: Date.now() });
+            tap((modules) => {
+                this.modulesCache.set(cacheKey, {
+                    data: modules,
+                    timestamp: Date.now(),
+                });
                 this.modulesSubject.next(modules);
                 // Salvar no localStorage
                 localStorage.setItem('persisted_modules', JSON.stringify(modules));
             }),
             catchError(this.handleError.bind(this)),
             finalize(() => this.loadingSubject.next(false)),
-            shareReplay(1)
+            shareReplay(1),
         );
     }
 
@@ -184,8 +214,8 @@ export class ModuleService {
         this.loadingSubject.next(true);
 
         const headers = {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
         };
 
         // Construir parâmetros
@@ -195,54 +225,69 @@ export class ModuleService {
             params = params.set('role_id', roleId.toString());
         }
 
-        return this.http.get<ModulesApiResponse>(`${this.API_URL}/role`, { headers, params }).pipe(
-            retryWhen(errors =>
-                errors.pipe(
-                    delayWhen(() => timer(this.RETRY_DELAY)),
-                    tap(error => console.warn(`Tentativa de buscar módulos por cargo falhou: ${error.message}`)),
-                    map((error, index) => {
-                        if (index >= this.MAX_RETRIES - 1) {
-                            throw error;
-                        }
-                        return error;
-                    })
-                )
-            ),
-            map(response => {
-                if (response && response.success && Array.isArray(response.data.modules)) {
-                    return response.data.modules.map((apiModule: ApiModule): Module => ({
-                        id: apiModule.id,
-                        name: apiModule.name,
-                        thumbnail_url: apiModule.image_path,
-                        contentCount: apiModule.content_count || 0,
-                        created_at: apiModule.created_at,
-                        updated_at: apiModule.updated_at,
-                        lessons: apiModule.lessons?.map(lesson => ({
-                            id: lesson.id,
-                            uuid: lesson.uuid,
-                            name: lesson.name,
-                            description: lesson.description,
-                            thumbnail_url: lesson.thumbnail_url,
-                            video_url: lesson.video_url,
-                            created_at: lesson.created_at,
-                            updated_at: lesson.updated_at,
-                            deleted_at: lesson.deleted_at,
-                            pivot: lesson.pivot
-                        })) || []
-                    }));
-                }
-                return [];
-            }),
-            tap(modules => {
-                this.modulesCache.set(cacheKey, { data: modules, timestamp: Date.now() });
-                this.modulesSubject.next(modules);
-                // Salvar no localStorage
-                localStorage.setItem('persisted_modules', JSON.stringify(modules));
-            }),
-            catchError(this.handleError.bind(this)),
-            finalize(() => this.loadingSubject.next(false)),
-            shareReplay(1)
-        );
+        return this.http
+            .get<ModulesApiResponse>(`${this.API_URL}/role`, { headers, params })
+            .pipe(
+                retryWhen((errors) =>
+                    errors.pipe(
+                        delayWhen(() => timer(this.RETRY_DELAY)),
+                        tap((error) =>
+                            console.warn(
+                                `Tentativa de buscar módulos por cargo falhou: ${error.message}`,
+                            ),
+                        ),
+                        map((error, index) => {
+                            if (index >= this.MAX_RETRIES - 1) {
+                                throw error;
+                            }
+                            return error;
+                        }),
+                    ),
+                ),
+                map((response) => {
+                    if (
+                        response &&
+                        response.success &&
+                        Array.isArray(response.data.modules)
+                    ) {
+                        return response.data.modules.map(
+                            (apiModule: ApiModule): Module => ({
+                                id: apiModule.id,
+                                name: apiModule.name,
+                                thumbnail_url: apiModule.image_path,
+                                contentCount: apiModule.content_count || 0,
+                                created_at: apiModule.created_at,
+                                updated_at: apiModule.updated_at,
+                                lessons:
+                                    apiModule.lessons?.map((lesson) => ({
+                                        id: lesson.id,
+                                        uuid: lesson.uuid,
+                                        name: lesson.name,
+                                        description: lesson.description,
+                                        thumbnail_url: lesson.thumbnail_url,
+                                        video_url: lesson.video_url,
+                                        created_at: lesson.created_at,
+                                        updated_at: lesson.updated_at,
+                                        deleted_at: lesson.deleted_at,
+                                        pivot: lesson.pivot,
+                                    })) || [],
+                            }),
+                        );
+                    }
+                    return [];
+                }),
+                tap((modules) => {
+                    this.modulesCache.set(cacheKey, {
+                        data: modules,
+                        timestamp: Date.now(),
+                    });
+                    // Salvar no localStorage
+                    localStorage.setItem('persisted_modules', JSON.stringify(modules));
+                }),
+                catchError(this.handleError.bind(this)),
+                finalize(() => this.loadingSubject.next(false)),
+                shareReplay(1),
+            );
     }
 
     // Método para criar um novo módulo
@@ -260,7 +305,7 @@ export class ModuleService {
                 console.error('Erro ao criar módulo:', error);
                 return of(null);
             }),
-            finalize(() => this.loadingSubject.next(false))
+            finalize(() => this.loadingSubject.next(false)),
         );
     }
 
@@ -289,7 +334,7 @@ export class ModuleService {
         console.error('Erro ao buscar módulos:', {
             status: error.status,
             message: error.error?.message || error.message,
-            error: error.error
+            error: error.error,
         });
 
         return throwError(() => new Error(errorMessage));
@@ -310,10 +355,12 @@ export class ModuleService {
 
         // Atualizar todos os caches de módulos
         this.modulesCache.forEach((cacheEntry, cacheKey) => {
-            const updatedModules = cacheEntry.data.map(module => {
+            const updatedModules = cacheEntry.data.map((module) => {
                 if (module.lessons) {
                     const originalLength = module.lessons.length;
-                    module.lessons = module.lessons.filter(lesson => lesson.id !== lessonId);
+                    module.lessons = module.lessons.filter(
+                        (lesson) => lesson.id !== lessonId,
+                    );
 
                     // Se houve mudança no número de aulas, atualizar contentCount
                     if (module.lessons.length !== originalLength) {
@@ -327,7 +374,7 @@ export class ModuleService {
             // Atualizar o cache com os módulos modificados
             this.modulesCache.set(cacheKey, {
                 data: updatedModules,
-                timestamp: cacheEntry.timestamp
+                timestamp: cacheEntry.timestamp,
             });
         });
 
@@ -336,9 +383,11 @@ export class ModuleService {
             // Emitir o valor atual do cache principal (se houver)
             const currentModules = this.modulesSubject.value;
             if (currentModules.length > 0) {
-                const updatedCurrentModules = currentModules.map(module => {
+                const updatedCurrentModules = currentModules.map((module) => {
                     if (module.lessons) {
-                        module.lessons = module.lessons.filter(lesson => lesson.id !== lessonId);
+                        module.lessons = module.lessons.filter(
+                            (lesson) => lesson.id !== lessonId,
+                        );
                         module.contentCount = module.lessons.length;
                     }
                     return module;
@@ -356,10 +405,12 @@ export class ModuleService {
 
         // Atualizar todos os caches de módulos
         this.modulesCache.forEach((cacheEntry, cacheKey) => {
-            const updatedModules = cacheEntry.data.map(module => {
+            const updatedModules = cacheEntry.data.map((module) => {
                 if (module.id === moduleId && module.lessons) {
                     const originalLength = module.lessons.length;
-                    module.lessons = module.lessons.filter(lesson => lesson.id !== lessonId);
+                    module.lessons = module.lessons.filter(
+                        (lesson) => lesson.id !== lessonId,
+                    );
 
                     // Se houve mudança no número de aulas, atualizar contentCount
                     if (module.lessons.length !== originalLength) {
@@ -373,7 +424,7 @@ export class ModuleService {
             // Atualizar o cache com os módulos modificados
             this.modulesCache.set(cacheKey, {
                 data: updatedModules,
-                timestamp: cacheEntry.timestamp
+                timestamp: cacheEntry.timestamp,
             });
         });
 
@@ -382,9 +433,11 @@ export class ModuleService {
             // Emitir o valor atual do cache principal (se houver)
             const currentModules = this.modulesSubject.value;
             if (currentModules.length > 0) {
-                const updatedCurrentModules = currentModules.map(module => {
+                const updatedCurrentModules = currentModules.map((module) => {
                     if (module.id === moduleId && module.lessons) {
-                        module.lessons = module.lessons.filter(lesson => lesson.id !== lessonId);
+                        module.lessons = module.lessons.filter(
+                            (lesson) => lesson.id !== lessonId,
+                        );
                         module.contentCount = module.lessons.length;
                     }
                     return module;
@@ -411,7 +464,9 @@ export class ModuleService {
     /**
      * Busca todos os módulos para admin, filtrando por role_id
      */
-    getAllModulesForAdminByRoleId(roleId: number): Observable<{ modules: Module[]; totalModules: number }> {
+    getAllModulesForAdminByRoleId(
+        roleId: number,
+    ): Observable<{ modules: Module[]; totalModules: number }> {
         const token = this.authService.getToken();
         const isAdmin = this.authService.isAdmin();
 
@@ -421,8 +476,8 @@ export class ModuleService {
 
         const url = `${this.API_URL}/all-admin?role_id=${roleId}`;
         const headers = {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
         };
 
         return this.http.get<ModulesApiResponse>(url, { headers }).pipe(
@@ -431,33 +486,36 @@ export class ModuleService {
                     throw new Error(response.message || 'Erro ao carregar módulos');
                 }
 
-                const modules = response.data.modules.map((apiModule: ApiModule): Module => ({
-                    id: apiModule.id,
-                    name: apiModule.name,
-                    thumbnail_url: apiModule.image_path,
-                    contentCount: apiModule.content_count || 0,
-                    created_at: apiModule.created_at,
-                    updated_at: apiModule.updated_at,
-                    lessons: apiModule.lessons?.map(lesson => ({
-                        id: lesson.id,
-                        uuid: lesson.uuid,
-                        name: lesson.name,
-                        description: lesson.description,
-                        thumbnail_url: lesson.thumbnail_url,
-                        video_url: lesson.video_url,
-                        created_at: lesson.created_at,
-                        updated_at: lesson.updated_at,
-                        deleted_at: lesson.deleted_at,
-                        pivot: lesson.pivot
-                    })) || []
-                }));
+                const modules = response.data.modules.map(
+                    (apiModule: ApiModule): Module => ({
+                        id: apiModule.id,
+                        name: apiModule.name,
+                        thumbnail_url: apiModule.image_path,
+                        contentCount: apiModule.content_count || 0,
+                        created_at: apiModule.created_at,
+                        updated_at: apiModule.updated_at,
+                        lessons:
+                            apiModule.lessons?.map((lesson) => ({
+                                id: lesson.id,
+                                uuid: lesson.uuid,
+                                name: lesson.name,
+                                description: lesson.description,
+                                thumbnail_url: lesson.thumbnail_url,
+                                video_url: lesson.video_url,
+                                created_at: lesson.created_at,
+                                updated_at: lesson.updated_at,
+                                deleted_at: lesson.deleted_at,
+                                pivot: lesson.pivot,
+                            })) || [],
+                    }),
+                );
 
                 return {
                     modules,
-                    totalModules: response.data.total_modules
+                    totalModules: response.data.total_modules,
                 };
             }),
-            catchError(error => this.handleError(error))
+            catchError((error) => this.handleError(error)),
         );
     }
 
@@ -466,8 +524,12 @@ export class ModuleService {
      */
     assignModulesToRoles(moduleIds: number[], roleId: number, token: string) {
         const url = `${environment.apiUrl}/api/v1/modules/assign-to-roles`;
-        const headers = { 'Authorization': `Bearer ${token}` };
-        return this.http.post<any>(url, { module_ids: moduleIds, role_id: roleId }, { headers });
+        const headers = { Authorization: `Bearer ${token}` };
+        return this.http.post<any>(
+            url,
+            { module_ids: moduleIds, role_id: roleId },
+            { headers },
+        );
     }
 
     /**
@@ -475,36 +537,40 @@ export class ModuleService {
      */
     deleteModule(moduleId: number, token: string): Observable<any> {
         const url = `${this.API_URL}/${moduleId}`;
-        const headers = { 'Authorization': `Bearer ${token}` };
+        const headers = { Authorization: `Bearer ${token}` };
 
         return this.http.delete<any>(url, { headers }).pipe(
             tap(() => {
                 // Limpar cache para forçar recarregamento
                 this.clearCache();
             }),
-            catchError(error => {
+            catchError((error) => {
                 console.error('Erro ao deletar módulo:', error);
                 return throwError(() => error);
-            })
+            }),
         );
     }
 
     /**
      * Remove um módulo de um cargo específico
      */
-    deleteModuleFromRole(moduleId: number, roleId: number, token: string): Observable<any> {
+    deleteModuleFromRole(
+        moduleId: number,
+        roleId: number,
+        token: string,
+    ): Observable<any> {
         const url = `${this.API_URL}/${moduleId}/role/${roleId}`;
-        const headers = { 'Authorization': `Bearer ${token}` };
+        const headers = { Authorization: `Bearer ${token}` };
 
         return this.http.delete<any>(url, { headers }).pipe(
             tap(() => {
                 // Limpar cache para forçar recarregamento
                 this.clearCache();
             }),
-            catchError(error => {
+            catchError((error) => {
                 console.error('Erro ao remover módulo do cargo:', error);
                 return throwError(() => error);
-            })
+            }),
         );
     }
-} 
+}

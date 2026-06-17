@@ -1,115 +1,154 @@
 <aside class="sidebar">
-    <nav class="sidebar-nav">
-        <ul class="nav-list">
-            <ng-container *ngIf="isAdmin; else nonAdmin">
-                <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-                    <a routerLink="/analytics" class="nav-link">
-                        <span class="nav-icon">
-                            <div [innerHTML]="'sidebar-analytics' | svgIcon:'': 15: 15	"></div>
-                        </span>
-                        <span class="nav-text">Analytics</span>
-                    </a>
-                </li>
-                <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-                    <a routerLink="/dashboard" class="nav-link">
-                        <span class="nav-icon">
-                            <div [innerHTML]="'sidebar-dashboard' | svgIcon:'': 20: 20	"></div>
-                        </span>
-                        <span class="nav-text">Gestão de cargos</span>
-                    </a>
-                </li>
-                <li class="nav-item" routerLinkActive="active" *ngIf="isAdmin">
-                    <a routerLink="/collaborators" class="nav-link">
-                        <span class="nav-icon">
-                            <div [innerHTML]="'sidebar-collaborators' | svgIcon:'': 20: 20	"></div>
-                        </span>
-                        <span class="nav-text">Colaboradores</span>
-                    </a>
-                </li>
-                <li class="nav-item" routerLinkActive="active">
-                    <a routerLink="/integrations" class="nav-link">
-                        <span class="nav-icon">
-                            <div [innerHTML]="'sidebar-integ' | svgIcon:'': 15: 15	"></div>
-                        </span>
-                        <span class="nav-text">Integrações</span>
-                    </a>
-                </li>
-                <li class="nav-item" routerLinkActive="active">
-                    <a routerLink="/settings" class="nav-link">
-                        <span class="nav-icon">
-                            <div [innerHTML]="'sidebar-settings' | svgIcon:'': 15: 15	"></div>
-                        </span>
-                        <span class="nav-text">Configurações</span>
-                    </a>
-                </li>
-                <div class="sidebar-progress-admin">
-                    <div class="progress-item">
-                        <div class="progress-header">
-                            <span class="progress-label">Cursos criados</span>
-                            <span class="progress-percentage">
-                                {{ rolesCountExcluindoAdmin > 10 ? '10/10+' : rolesCountExcluindoAdmin + '/10' }}
-                            </span>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" [style.width.%]="rolesProgressPercent"></div>
-                        </div>
-                    </div>
-                    <div class="progress-item">
-                        <div class="progress-header">
-                            <span class="progress-label">Colaboradores</span>
-                            <span class="progress-percentage">{{ collaboratorsAdminsProgressText }}</span>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" [style.width.%]="collaboratorsAdminsProgressPercent"></div>
-                        </div>
-                    </div>
-                </div>
-            </ng-container>
-
-            <ng-template #nonAdmin>
-                <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-                    <a routerLink="/dashboard" class="nav-link">
-                        <span class="nav-icon">
-                            <div [innerHTML]="'sidebar-dashboard' | svgIcon:'': 20: 20	"></div>
-                        </span>
-                        <span class="nav-text">Início</span>
-                    </a>
-                </li>
-                <li class="nav-item" routerLinkActive="active">
-                    <a routerLink="/tools" class="nav-link">
-                        <span class="nav-icon">
-                            <div [innerHTML]="'sidebar-tools' | svgIcon:'': 20: 20	"></div>
-                        </span>
-                        <span class="nav-text">Ferramentas</span>
-                    </a>
-                </li>
-                <li class="nav-item" routerLinkActive="active">
-                    <a routerLink="/support" class="nav-link">
-                        <span class="nav-icon">
-                            <div [innerHTML]="'sidebar-support' | svgIcon:'': 20: 20	"></div>
-                        </span>
-                        <span class="nav-text">Dúvidas</span>
-                    </a>
-                </li>
-                <div *ngIf="!isAdmin" class="sidebar-progress">
-                    <div class="progress-header">
-                        <span class="progress-label">Progresso total</span>
-                        <span class="progress-percentage">{{ totalGlobalProgress }}%</span>
-                    </div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" [style.width.%]="totalGlobalProgress"></div>
-                    </div>
-                </div>
-            </ng-template>
-        </ul>
-    </nav>
-
-    <div class="sidebar-footer">
-        <a (click)="logout()" class="logout-link" style="cursor: pointer;">
-            <span class="logout-icon">
-                <div [innerHTML]="'sidebar-logout' | svgIcon:'': 20: 20	"></div>
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <ng-container *ngIf="isAdmin; else nonAdmin">
+        <li
+          class="nav-item"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <a routerLink="/analytics" class="nav-link">
+            <span class="nav-icon">
+              <div
+                [innerHTML]="'sidebar-analytics' | svgIcon: '' : 15 : 15"
+              ></div>
             </span>
-            <span class="logout-text">Log Out</span>
-        </a>
-    </div>
+            <span class="nav-text">Analytics</span>
+          </a>
+        </li>
+        <li
+          class="nav-item"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <a routerLink="/dashboard" class="nav-link">
+            <span class="nav-icon">
+              <div
+                [innerHTML]="'sidebar-dashboard' | svgIcon: '' : 20 : 20"
+              ></div>
+            </span>
+            <span class="nav-text">Gestão de cursos</span>
+          </a>
+        </li>
+        <li class="nav-item" routerLinkActive="active" *ngIf="isAdmin">
+          <a routerLink="/collaborators" class="nav-link">
+            <span class="nav-icon">
+              <div
+                [innerHTML]="'sidebar-collaborators' | svgIcon: '' : 20 : 20"
+              ></div>
+            </span>
+            <span class="nav-text">Colaboradores</span>
+          </a>
+        </li>
+        <li class="nav-item" routerLinkActive="active">
+          <a routerLink="/integrations" class="nav-link">
+            <span class="nav-icon">
+              <div [innerHTML]="'sidebar-integ' | svgIcon: '' : 15 : 15"></div>
+            </span>
+            <span class="nav-text">Integrações</span>
+          </a>
+        </li>
+        <li class="nav-item" routerLinkActive="active">
+          <a routerLink="/settings" class="nav-link">
+            <span class="nav-icon">
+              <div
+                [innerHTML]="'sidebar-settings' | svgIcon: '' : 15 : 15"
+              ></div>
+            </span>
+            <span class="nav-text">Configurações</span>
+          </a>
+        </li>
+        <div class="sidebar-progress-admin">
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">Cursos criados</span>
+              <span class="progress-percentage">
+                {{
+                  rolesCountExcluindoAdmin > 10
+                    ? "10/10+"
+                    : rolesCountExcluindoAdmin + "/10"
+                }}
+              </span>
+            </div>
+            <div class="progress-bar-container">
+              <div
+                class="progress-bar"
+                [style.width.%]="rolesProgressPercent"
+              ></div>
+            </div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">Colaboradores</span>
+              <span class="progress-percentage">{{
+                collaboratorsAdminsProgressText
+              }}</span>
+            </div>
+            <div class="progress-bar-container">
+              <div
+                class="progress-bar"
+                [style.width.%]="collaboratorsAdminsProgressPercent"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #nonAdmin>
+        <li
+          class="nav-item"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <a routerLink="/dashboard" class="nav-link">
+            <span class="nav-icon">
+              <div
+                [innerHTML]="'sidebar-dashboard' | svgIcon: '' : 20 : 20"
+              ></div>
+            </span>
+            <span class="nav-text">Início</span>
+          </a>
+        </li>
+        <li class="nav-item" routerLinkActive="active">
+          <a routerLink="/tools" class="nav-link">
+            <span class="nav-icon">
+              <div [innerHTML]="'sidebar-tools' | svgIcon: '' : 20 : 20"></div>
+            </span>
+            <span class="nav-text">Ferramentas</span>
+          </a>
+        </li>
+        <li class="nav-item" routerLinkActive="active">
+          <a routerLink="/support" class="nav-link">
+            <span class="nav-icon">
+              <div
+                [innerHTML]="'sidebar-support' | svgIcon: '' : 20 : 20"
+              ></div>
+            </span>
+            <span class="nav-text">Dúvidas</span>
+          </a>
+        </li>
+        <div *ngIf="!isAdmin" class="sidebar-progress">
+          <div class="progress-header">
+            <span class="progress-label">Progresso total</span>
+            <span class="progress-percentage">{{ totalGlobalProgress }}%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div
+              class="progress-bar"
+              [style.width.%]="totalGlobalProgress"
+            ></div>
+          </div>
+        </div>
+      </ng-template>
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a (click)="logout()" class="logout-link" style="cursor: pointer">
+      <span class="logout-icon">
+        <div [innerHTML]="'sidebar-logout' | svgIcon: '' : 20 : 20"></div>
+      </span>
+      <span class="logout-text">Log Out</span>
+    </a>
+  </div>
 </aside>

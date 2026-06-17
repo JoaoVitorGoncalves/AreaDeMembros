@@ -1,4 +1,15 @@
-import { Component, Input, Output, EventEmitter, OnInit, AfterViewInit, OnDestroy, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import {
+    Component,
+    Input,
+    Output,
+    EventEmitter,
+    OnInit,
+    AfterViewInit,
+    OnDestroy,
+    OnChanges,
+    SimpleChanges,
+    ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -27,11 +38,23 @@ import { AuthService } from '../../services/auth.service';
 @Component({
     selector: 'app-admin-cargo-detail',
     standalone: true,
-    imports: [CommonModule, FormsModule, AddUserComponent, AddToolComponent, AddModuleComponent, AddLessonComponent, SvgIconPipe, AddExistingUserComponent, AddExistingToolComponent, AddExistingModuleComponent],
+    imports: [
+        CommonModule,
+        FormsModule,
+        AddUserComponent,
+        AddToolComponent,
+        AddModuleComponent,
+        AddLessonComponent,
+        SvgIconPipe,
+        AddExistingUserComponent,
+        AddExistingToolComponent,
+        AddExistingModuleComponent,
+    ],
     templateUrl: './admin-cargo-detail.component.html',
-    styleUrls: ['./admin-cargo-detail.component.scss']
+    styleUrls: ['./admin-cargo-detail.component.scss'],
 })
-export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
+export class AdminCargoDetailComponent
+    implements OnInit, AfterViewInit, OnDestroy, OnChanges {
     @Input() cargo: Role | null = null;
     @Output() close = new EventEmitter<void>();
     @Output() cargoUpdated = new EventEmitter<Role>();
@@ -106,7 +129,9 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
 
     private removeLocallyAddedUser(userId: number): void {
         const before = this.locallyAddedUsers.length;
-        this.locallyAddedUsers = this.locallyAddedUsers.filter(u => u.id !== userId);
+        this.locallyAddedUsers = this.locallyAddedUsers.filter(
+            (u) => u.id !== userId,
+        );
         if (this.locallyAddedUsers.length !== before) {
             this.saveLocallyAddedUsersToStorage();
         }
@@ -152,7 +177,9 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
 
     private removeLocallyAddedTool(toolId: number): void {
         const before = this.locallyAddedTools.length;
-        this.locallyAddedTools = this.locallyAddedTools.filter(t => t.id !== toolId);
+        this.locallyAddedTools = this.locallyAddedTools.filter(
+            (t) => t.id !== toolId,
+        );
         if (this.locallyAddedTools.length !== before) {
             this.saveLocallyAddedToolsToStorage();
         }
@@ -163,6 +190,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
     modulesLoading$: Observable<boolean>;
     modules: Module[] = []; // Adicionar array local para módulos
     private modulesSubject = new BehaviorSubject<Module[]>([]);
+    private moduleRequestId = 0;
 
     // Cache local para módulos adicionados temporariamente
     private localModulesCache = new Map<number, Module[]>();
@@ -246,8 +274,8 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         const token = this.authService.getToken() || '';
         this.toolsService.deleteTool(tool.id, token).subscribe({
             next: () => {
-                this.filteredTools = this.filteredTools.filter(t => t.id !== tool.id);
-                this.tools = this.tools.filter(t => t.id !== tool.id);
+                this.filteredTools = this.filteredTools.filter((t) => t.id !== tool.id);
+                this.tools = this.tools.filter((t) => t.id !== tool.id);
                 // Remove do cache local e do localStorage
                 this.removeLocallyAddedTool(tool.id);
                 this.hideToolActionsDropdown();
@@ -255,7 +283,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             error: () => {
                 // Aqui você pode exibir uma notificação de erro se desejar
                 this.hideToolActionsDropdown();
-            }
+            },
         });
     }
 
@@ -265,8 +293,8 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         const roleId = this.cargo.id;
         this.toolsService.deleteToolFromRole(tool.id, roleId, token).subscribe({
             next: () => {
-                this.filteredTools = this.filteredTools.filter(t => t.id !== tool.id);
-                this.tools = this.tools.filter(t => t.id !== tool.id);
+                this.filteredTools = this.filteredTools.filter((t) => t.id !== tool.id);
+                this.tools = this.tools.filter((t) => t.id !== tool.id);
                 // Remove do cache local e do localStorage
                 this.removeLocallyAddedTool(tool.id);
                 // Atualiza o observable global do serviço para refletir a remoção
@@ -274,14 +302,14 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                 if (currentState) {
                     this.toolsService.toolsSubject.next({
                         ...currentState,
-                        tools: currentState.tools.filter((t: any) => t.id !== tool.id)
+                        tools: currentState.tools.filter((t: any) => t.id !== tool.id),
                     });
                 }
                 this.hideToolActionsDropdown();
             },
             error: () => {
                 this.hideToolActionsDropdown();
-            }
+            },
         });
     }
 
@@ -289,12 +317,15 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         const token = this.authService.getToken() || '';
         this.moduleService.deleteModule(module.id, token).subscribe({
             next: () => {
-                this.modules = this.modules.filter(m => m.id !== module.id);
+                this.modules = this.modules.filter((m) => m.id !== module.id);
                 this.modulesSubject.next(this.modules);
                 // Remove do cache local
                 if (this.cargo?.id) {
-                    const existingLocalModules = this.localModulesCache.get(this.cargo.id) || [];
-                    const updatedLocalModules = existingLocalModules.filter(m => m.id !== module.id);
+                    const existingLocalModules =
+                        this.localModulesCache.get(this.cargo.id) || [];
+                    const updatedLocalModules = existingLocalModules.filter(
+                        (m) => m.id !== module.id,
+                    );
                     this.localModulesCache.set(this.cargo.id, updatedLocalModules);
                     this.saveLocalModulesToStorage();
                 }
@@ -302,7 +333,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             },
             error: () => {
                 this.hideModuleActionsDropdown();
-            }
+            },
         });
     }
 
@@ -310,23 +341,28 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         if (!this.cargo) return;
         const token = this.authService.getToken() || '';
         const roleId = this.cargo.id;
-        this.moduleService.deleteModuleFromRole(module.id, roleId, token).subscribe({
-            next: () => {
-                this.modules = this.modules.filter(m => m.id !== module.id);
-                this.modulesSubject.next(this.modules);
-                // Remove do cache local
-                if (this.cargo?.id) {
-                    const existingLocalModules = this.localModulesCache.get(this.cargo.id) || [];
-                    const updatedLocalModules = existingLocalModules.filter(m => m.id !== module.id);
-                    this.localModulesCache.set(this.cargo.id, updatedLocalModules);
-                    this.saveLocalModulesToStorage();
-                }
-                this.hideModuleActionsDropdown();
-            },
-            error: () => {
-                this.hideModuleActionsDropdown();
-            }
-        });
+        this.moduleService
+            .deleteModuleFromRole(module.id, roleId, token)
+            .subscribe({
+                next: () => {
+                    this.modules = this.modules.filter((m) => m.id !== module.id);
+                    this.modulesSubject.next(this.modules);
+                    // Remove do cache local
+                    if (this.cargo?.id) {
+                        const existingLocalModules =
+                            this.localModulesCache.get(this.cargo.id) || [];
+                        const updatedLocalModules = existingLocalModules.filter(
+                            (m) => m.id !== module.id,
+                        );
+                        this.localModulesCache.set(this.cargo.id, updatedLocalModules);
+                        this.saveLocalModulesToStorage();
+                    }
+                    this.hideModuleActionsDropdown();
+                },
+                error: () => {
+                    this.hideModuleActionsDropdown();
+                },
+            });
     }
 
     onDeleteLesson(lesson: Lesson, module: Module): void {
@@ -338,29 +374,31 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             },
             error: () => {
                 this.hideLessonActionsDropdown();
-            }
+            },
         });
     }
 
     onDeleteLessonFromModule(lesson: Lesson, module: Module): void {
         const token = this.authService.getToken() || '';
-        this.lessonService.deleteLessonFromModule(lesson.id, module.id, token).subscribe({
-            next: () => {
-                // The global lesson deletion event will handle module refresh
-                this.hideLessonActionsDropdown();
-            },
-            error: () => {
-                this.hideLessonActionsDropdown();
-            }
-        });
+        this.lessonService
+            .deleteLessonFromModule(lesson.id, module.id, token)
+            .subscribe({
+                next: () => {
+                    // The global lesson deletion event will handle module refresh
+                    this.hideLessonActionsDropdown();
+                },
+                error: () => {
+                    this.hideLessonActionsDropdown();
+                },
+            });
     }
 
     onDeleteUser(user: User): void {
         const token = this.authService.getToken() || '';
         this.usersService.deleteUser(user.id, token).subscribe({
             next: () => {
-                this.filteredUsers = this.filteredUsers.filter(u => u.id !== user.id);
-                this.users = this.users.filter(u => u.id !== user.id);
+                this.filteredUsers = this.filteredUsers.filter((u) => u.id !== user.id);
+                this.users = this.users.filter((u) => u.id !== user.id);
                 // Remove do cache local e do localStorage
                 this.removeLocallyAddedUser(user.id);
                 this.hideUserActionsDropdown();
@@ -372,7 +410,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             },
             error: () => {
                 this.hideUserActionsDropdown();
-            }
+            },
         });
     }
 
@@ -382,28 +420,30 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         const roleId = this.cargo.id;
         this.usersService.deleteUserFromRole(user.id, roleId, token).subscribe({
             next: () => {
-                this.filteredUsers = this.filteredUsers.filter(u => u.id !== user.id);
-                this.users = this.users.filter(u => u.id !== user.id);
+                this.filteredUsers = this.filteredUsers.filter((u) => u.id !== user.id);
+                this.users = this.users.filter((u) => u.id !== user.id);
                 // Remove do cache local e do localStorage
                 this.removeLocallyAddedUser(user.id);
                 // Atualiza o observable global do serviço para refletir a remoção
                 const currentState = this.usersService['usersStateSubject'].value;
                 this.usersService['usersStateSubject'].next({
                     ...currentState,
-                    users: currentState.users.filter((u: any) => u.id !== user.id)
+                    users: currentState.users.filter((u: any) => u.id !== user.id),
                 });
                 // Atualiza o cache interno do serviço para refletir a remoção
                 if (this.cargo?.name) {
                     const cacheKey = `${this.cargo.name}_1_5`;
                     const cached = this.usersService['cache'].get(cacheKey);
                     if (cached) {
-                        const updatedUsers = cached.data.users.filter((u: any) => u.id !== user.id);
+                        const updatedUsers = cached.data.users.filter(
+                            (u: any) => u.id !== user.id,
+                        );
                         this.usersService['cache'].set(cacheKey, {
                             ...cached,
                             data: {
                                 ...cached.data,
-                                users: updatedUsers
-                            }
+                                users: updatedUsers,
+                            },
                         });
                     }
                 }
@@ -411,7 +451,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                 if (this.cargo && typeof this.cargo.users_count === 'number') {
                     this.cargo = {
                         ...this.cargo,
-                        users_count: Math.max(0, this.cargo.users_count - 1)
+                        users_count: Math.max(0, this.cargo.users_count - 1),
                     };
                     this.cargoUpdated.emit(this.cargo);
                 }
@@ -419,7 +459,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             },
             error: () => {
                 this.hideUserActionsDropdown();
-            }
+            },
         });
     }
 
@@ -432,7 +472,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         private lessonService: LessonService,
         private router: Router,
         private cdr: ChangeDetectorRef, // Adicionado para detecção de mudanças
-        private authService: AuthService
+        private authService: AuthService,
     ) {
         this.users$ = this.usersService.users$;
         this.loading$ = this.usersService.loading$;
@@ -442,18 +482,20 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         this.progressStatistics$ = this.usersService.progressStatistics$;
 
         // Atualiza users local sempre que users$ emitir
-        this.users$.subscribe(users => {
+        this.users$.subscribe((users) => {
             // Sempre recarrega do localStorage para garantir persistência
             this.loadLocallyAddedUsersFromStorage();
             // Mescla usuários da API com os adicionados localmente, sem duplicar
             const mergedUsers = [...(users || [])];
-            this.locallyAddedUsers.forEach(localUser => {
-                if (!mergedUsers.some(u => u.id === localUser.id)) {
+            this.locallyAddedUsers.forEach((localUser) => {
+                if (!mergedUsers.some((u) => u.id === localUser.id)) {
                     mergedUsers.push(localUser);
                 }
             });
             // Garante que não há duplicatas (caso users já contenha algum local)
-            this.users = mergedUsers.filter((user, idx, arr) => arr.findIndex(u => u.id === user.id) === idx);
+            this.users = mergedUsers.filter(
+                (user, idx, arr) => arr.findIndex((u) => u.id === user.id) === idx,
+            );
             this.applyUserFilter();
             // this.cdr.detectChanges();
         });
@@ -463,32 +505,17 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         this.modulesLoading$ = this.moduleService.loading$;
 
         // Sincronizar módulos com o LessonService e atualizar estado local
-        this.modules$.pipe(takeUntil(this.destroy$)).subscribe(modules => {
+        this.modules$.pipe(takeUntil(this.destroy$)).subscribe((modules) => {
             this.lessonService.setModules(modules);
-            // Atualizar o estado local apenas se não houver módulos locais sendo editados
-            // Isso evita que o estado global sobrescreva mudanças locais
             if (modules && modules.length > 0) {
-                // Combinar módulos do servidor com módulos locais não sincronizados
-                const currentLocalModules = this.modules || [];
-                console.log(`🔄 Sincronização do ModuleService:`, {
-                    serverModules: modules.length,
-                    currentLocalModules: currentLocalModules.length,
-                    serverModuleIds: modules.map(m => m.id),
-                    localModuleIds: currentLocalModules.map(m => m.id)
-                });
+                // Combinar módulos do servidor com módulos locais persistidos
+                const localModules =
+                    this.localModulesCache.get(this.cargo?.id ?? 0) || [];
 
                 const modulesMap = new Map<number, Module>();
-
-                // Adicionar módulos do servidor primeiro
-                modules.forEach(module => {
-                    modulesMap.set(module.id, module);
-                });
-
-                // Adicionar módulos locais que não estão no servidor
-                currentLocalModules.forEach(localModule => {
-                    if (!modulesMap.has(localModule.id)) {
-                        modulesMap.set(localModule.id, localModule);
-                    }
+                modules.forEach((m) => modulesMap.set(m.id, m));
+                localModules.forEach((lm) => {
+                    if (!modulesMap.has(lm.id)) modulesMap.set(lm.id, lm);
                 });
 
                 const combinedModules = Array.from(modulesMap.values());
@@ -509,7 +536,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         this.toolsError$ = this.toolsErrorSubject.asObservable();
 
         // Atualiza tools local sempre que tools$ emitir
-        this.tools$.subscribe(tools => {
+        this.tools$.subscribe((tools) => {
             // Sempre recarrega do localStorage para garantir persistência
             this.loadLocallyAddedToolsFromStorage();
             // Mescla ferramentas da API com as adicionadas localmente, sem duplicar
@@ -520,12 +547,12 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                 const toolsMap = new Map<number, Tool>();
 
                 // Adicionar ferramentas do servidor primeiro
-                tools.forEach(tool => {
+                tools.forEach((tool) => {
                     toolsMap.set(tool.id, tool);
                 });
 
                 // Adicionar ferramentas locais que não estão no servidor
-                currentLocalTools.forEach(localTool => {
+                currentLocalTools.forEach((localTool) => {
                     if (!toolsMap.has(localTool.id)) {
                         toolsMap.set(localTool.id, localTool);
                     }
@@ -579,16 +606,16 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         document.addEventListener('keydown', this.handleKeydown.bind(this));
 
         // Escutar eventos de exclusão global de aulas
-        this.lessonService.lessonDeleted$.pipe(
-            takeUntil(this.destroy$)
-        ).subscribe(deletionEvent => {
-            if (deletionEvent) {
-                // O cache já foi atualizado de forma eficiente pelo LessonService
-                // Não é necessário fazer requisições adicionais ao servidor
-                // Apenas limpar o evento após processamento
-                this.lessonService.clearLessonDeletedEvent();
-            }
-        });
+        this.lessonService.lessonDeleted$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((deletionEvent) => {
+                if (deletionEvent) {
+                    // O cache já foi atualizado de forma eficiente pelo LessonService
+                    // Não é necessário fazer requisições adicionais ao servidor
+                    // Apenas limpar o evento após processamento
+                    this.lessonService.clearLessonDeletedEvent();
+                }
+            });
     }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -609,15 +636,31 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                 this.locallyAddedTools = [];
                 this.loadLocallyAddedToolsFromStorage();
 
+                // Limpar módulos do curso anterior para evitar vazamento de dados
+                this.modules = [];
+                this.modulesSubject.next([]);
+
+                // Incrementar contador para ignorar respostas de requests antigas (race condition)
+                this.moduleRequestId++;
+
+                // Limpar cache interno do ModuleService (cache Map + BehaviorSubject)
+                this.moduleService.clearCache();
+
+                // Limpar cache local de módulos
+                this.localModulesCache.clear();
+                if (this.cargo?.id) {
+                    localStorage.removeItem(`localModules_${this.cargo.id}`);
+                }
+
                 // Garantir que os módulos não sejam expandidos quando o cargo muda
                 this.expandedModules.clear();
-
-                // Carregar módulos locais do novo cargo
-                this.loadLocalModulesFromStorage();
 
                 // Sincronizar campos de configuração com o novo cargo
                 this.courseName = currentCargo?.name || '';
                 this.customUrl = currentCargo?.custom_url || '';
+
+                // Carregar módulos do servidor para o novo cargo
+                this.loadModulesIfNeeded();
 
                 // Se a tab ativa for suporte, carregar dados do novo cargo
                 if (this.activeTab === 'suporte') {
@@ -730,84 +773,56 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
 
     loadModules(): void {
         if (this.cargo?.name) {
-            this.moduleService.loadModulesByRole(this.cargo.name, this.cargo.id).subscribe({
-                next: (modules) => {
-                    // Obter módulos do servidor
-                    const serverModules = modules || [];
+            const requestId = ++this.moduleRequestId;
+            this.moduleService
+                .loadModulesByRole(this.cargo.name, this.cargo.id)
+                .subscribe({
+                    next: (modules) => {
+                        if (requestId !== this.moduleRequestId) return;
 
-                    // Obter módulos atualmente na lista de exibição
-                    const currentDisplayModules = this.modules || [];
+                        const serverModules = modules || [];
 
-                    // Obter módulos adicionados localmente para este cargo
-                    const localModules = this.localModulesCache.get(this.cargo!.id) || [];
+                        // Limpar módulos locais que já foram sincronizados com o servidor
+                        this.clearSyncedLocalModules(serverModules.map((m) => m.id));
 
-                    // Verificar se há módulos na lista de exibição que não estão no servidor
-                    // Esses são módulos que foram adicionados localmente mas ainda não foram sincronizados
-                    const unsyncedLocalModules = currentDisplayModules.filter(displayModule => {
-                        // Se o módulo está na lista de exibição mas não está no servidor
-                        // E não está no cache local, significa que foi adicionado recentemente
-                        const isInServer = serverModules.some(serverModule => serverModule.id === displayModule.id);
-                        const isInLocalCache = localModules.some(localModule => localModule.id === displayModule.id);
+                        // Obter módulos adicionados localmente (persistidos)
+                        const localModules =
+                            this.localModulesCache.get(this.cargo!.id) || [];
 
-                        return !isInServer && !isInLocalCache;
-                    });
+                        // Combinar módulos do servidor com locais, evitando duplicatas
+                        const modulesMap = new Map<number, Module>();
+                        serverModules.forEach((m) => modulesMap.set(m.id, m));
+                        localModules.forEach((lm) => {
+                            if (!modulesMap.has(lm.id)) modulesMap.set(lm.id, lm);
+                        });
 
-                    // Limpar módulos locais que já foram sincronizados com o servidor
-                    this.clearSyncedLocalModules(serverModules.map(m => m.id));
+                        const combinedModules = Array.from(modulesMap.values());
 
-                    // Obter módulos locais atualizados após limpeza
-                    const updatedLocalModules = this.localModulesCache.get(this.cargo!.id) || [];
+                        // Atualizar estado global E local
+                        this.moduleService.modulesSubject.next(combinedModules);
+                        this.modules = combinedModules;
+                        this.modulesSubject.next(this.modules);
 
-                    // Combinar módulos do servidor com módulos locais não sincronizados, evitando duplicatas
-                    const modulesMap = new Map<number, Module>();
+                        // Garantir que os módulos não sejam expandidos automaticamente
+                        this.expandedModules.clear();
+                    },
+                    error: (error) => {
+                        console.error('Erro ao carregar módulos:', error);
+                        // Em caso de erro, usar apenas módulos locais
+                        const localModules =
+                            this.localModulesCache.get(this.cargo!.id) || [];
 
-                    // Adicionar módulos do servidor primeiro (prioridade)
-                    serverModules.forEach(module => {
-                        modulesMap.set(module.id, module);
-                    });
+                        // Atualizar o estado global do ModuleService
+                        this.moduleService.modulesSubject.next(localModules);
 
-                    // Adicionar módulos locais não sincronizados
-                    updatedLocalModules.forEach(localModule => {
-                        if (!modulesMap.has(localModule.id)) {
-                            modulesMap.set(localModule.id, localModule);
-                        }
-                    });
+                        // Manter estado local para compatibilidade
+                        this.modules = localModules;
+                        this.modulesSubject.next(this.modules);
 
-                    // Adicionar módulos não sincronizados da lista de exibição
-                    unsyncedLocalModules.forEach(unsyncedModule => {
-                        if (!modulesMap.has(unsyncedModule.id)) {
-                            modulesMap.set(unsyncedModule.id, unsyncedModule);
-                        }
-                    });
-
-                    const combinedModules = Array.from(modulesMap.values());
-
-                    // Atualizar o estado global do ModuleService para sincronização em tempo real
-                    this.moduleService.modulesSubject.next(combinedModules);
-
-                    // Manter estado local para compatibilidade
-                    this.modules = combinedModules;
-                    this.modulesSubject.next(this.modules);
-
-                    // Garantir que os módulos não sejam expandidos automaticamente
-                    this.expandedModules.clear();
-                },
-                error: (error) => {
-                    console.error('Erro ao carregar módulos:', error);
-                    // Em caso de erro, usar apenas módulos locais
-                    const localModules = this.localModulesCache.get(this.cargo!.id) || [];
-
-                    // Atualizar o estado global do ModuleService
-                    this.moduleService.modulesSubject.next(localModules);
-
-                    // Manter estado local para compatibilidade
-                    this.modules = localModules;
-                    this.modulesSubject.next(this.modules);
-
-                    // Garantir que os módulos não sejam expandidos automaticamente
-                    this.expandedModules.clear();
-                }
-            });
+                        // Garantir que os módulos não sejam expandidos automaticamente
+                        this.expandedModules.clear();
+                    },
+                });
         } else {
             console.warn('⚠️ Cargo não encontrado para carregar módulos');
         }
@@ -828,17 +843,23 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
 
                     // Verificar se há ferramentas na lista de exibição que não estão no servidor
                     // Essas são ferramentas que foram adicionadas localmente mas ainda não foram sincronizadas
-                    const unsyncedLocalTools = currentDisplayTools.filter(displayTool => {
-                        // Se a ferramenta está na lista de exibição mas não está no servidor
-                        // E não está no cache local, significa que foi adicionada recentemente
-                        const isInServer = serverTools.some(serverTool => serverTool.id === displayTool.id);
-                        const isInLocalCache = localTools.some(localTool => localTool.id === displayTool.id);
+                    const unsyncedLocalTools = currentDisplayTools.filter(
+                        (displayTool) => {
+                            // Se a ferramenta está na lista de exibição mas não está no servidor
+                            // E não está no cache local, significa que foi adicionada recentemente
+                            const isInServer = serverTools.some(
+                                (serverTool) => serverTool.id === displayTool.id,
+                            );
+                            const isInLocalCache = localTools.some(
+                                (localTool) => localTool.id === displayTool.id,
+                            );
 
-                        return !isInServer && !isInLocalCache;
-                    });
+                            return !isInServer && !isInLocalCache;
+                        },
+                    );
 
                     // Limpar ferramentas locais que já foram sincronizadas com o servidor
-                    this.clearSyncedLocalTools(serverTools.map(t => t.id));
+                    this.clearSyncedLocalTools(serverTools.map((t) => t.id));
 
                     // Obter ferramentas locais atualizadas após limpeza
                     const updatedLocalTools = this.locallyAddedTools || [];
@@ -847,19 +868,19 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                     const toolsMap = new Map<number, Tool>();
 
                     // Adicionar ferramentas do servidor primeiro (prioridade)
-                    serverTools.forEach(tool => {
+                    serverTools.forEach((tool) => {
                         toolsMap.set(tool.id, tool);
                     });
 
                     // Adicionar ferramentas locais não sincronizadas
-                    updatedLocalTools.forEach(localTool => {
+                    updatedLocalTools.forEach((localTool) => {
                         if (!toolsMap.has(localTool.id)) {
                             toolsMap.set(localTool.id, localTool);
                         }
                     });
 
                     // Adicionar ferramentas não sincronizadas da lista de exibição
-                    unsyncedLocalTools.forEach(unsyncedTool => {
+                    unsyncedLocalTools.forEach((unsyncedTool) => {
                         if (!toolsMap.has(unsyncedTool.id)) {
                             toolsMap.set(unsyncedTool.id, unsyncedTool);
                         }
@@ -880,7 +901,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                     this.tools = localTools;
                     this.toolsSubject.next(this.tools);
                     this.applyToolFilter();
-                }
+                },
             });
         } else {
             console.warn('⚠️ Cargo não encontrado para carregar ferramentas');
@@ -897,7 +918,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                 error: (error) => {
                     this.toolsErrorSubject.next('Erro ao atualizar ferramentas');
                     console.error('Erro ao atualizar ferramentas:', error);
-                }
+                },
             });
         }
     }
@@ -906,21 +927,24 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         const isAdmin = this.supportService['authService'].isAdmin();
         const roleName = isAdmin && this.cargo?.name ? this.cargo.name : undefined;
         const roleId = isAdmin && this.cargo?.id ? this.cargo.id : undefined;
-        this.supportService.getSupport(false, roleName, roleId).pipe(takeUntil(this.destroy$)).subscribe({
-            next: (result) => {
-                this.support = result.support;
-                // Inicializar as propriedades locais
-                this.supportPhone = result.support?.phone || '';
-                this.supportEmail = result.support?.email || '';
-            },
-            error: (error) => {
-                console.error('Erro ao carregar suporte:', error);
-                // Em caso de erro, deixar os campos vazios mas funcionais
-                this.support = null;
-                this.supportPhone = '';
-                this.supportEmail = '';
-            }
-        });
+        this.supportService
+            .getSupport(false, roleName, roleId)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+                next: (result) => {
+                    this.support = result.support;
+                    // Inicializar as propriedades locais
+                    this.supportPhone = result.support?.phone || '';
+                    this.supportEmail = result.support?.email || '';
+                },
+                error: (error) => {
+                    console.error('Erro ao carregar suporte:', error);
+                    // Em caso de erro, deixar os campos vazios mas funcionais
+                    this.support = null;
+                    this.supportPhone = '';
+                    this.supportEmail = '';
+                },
+            });
     }
 
     // Forçar refresh do suporte (ignorar cache)
@@ -929,51 +953,74 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         const roleName = isAdmin && this.cargo?.name ? this.cargo.name : undefined;
         const roleId = isAdmin && this.cargo?.id ? this.cargo.id : undefined;
 
-        this.supportService.getSupport(true, roleName, roleId).pipe(takeUntil(this.destroy$)).subscribe({
-            next: (result) => {
-                this.support = result.support;
-                this.supportPhone = result.support?.phone || '';
-                this.supportEmail = result.support?.email || '';
-            },
-            error: (error) => {
-                console.error('Erro ao atualizar suporte:', error);
-            }
-        });
+        this.supportService
+            .getSupport(true, roleName, roleId)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+                next: (result) => {
+                    this.support = result.support;
+                    this.supportPhone = result.support?.phone || '';
+                    this.supportEmail = result.support?.email || '';
+                },
+                error: (error) => {
+                    console.error('Erro ao atualizar suporte:', error);
+                },
+            });
     }
 
     getInitials(name: string): string {
         return name
             .split(' ')
-            .map(word => word.charAt(0))
+            .map((word) => word.charAt(0))
             .join('')
             .toUpperCase()
             .slice(0, 2);
     }
 
     getAvatarColor(userId: number): string {
-        const colors = ['#3A4AFF', '#4A90E2', '#6A6AFF', '#FF6B6B', '#4ECDC4', '#45B7D1'];
+        const colors = [
+            '#3A4AFF',
+            '#4A90E2',
+            '#6A6AFF',
+            '#FF6B6B',
+            '#4ECDC4',
+            '#45B7D1',
+        ];
         return colors[userId % colors.length];
     }
 
     getEngagementColor(engagement: string): string {
         switch (engagement.toLowerCase()) {
-            case 'altíssimo': return '#4ECDC4';
-            case 'alto': return '#4ECDC4';
-            case 'médio': return '#FFA726';
-            case 'baixo': return '#FF6B6B';
-            case 'nenhum': return '#808080';
-            default: return '#808080';
+            case 'altíssimo':
+                return '#4ECDC4';
+            case 'alto':
+                return '#4ECDC4';
+            case 'médio':
+                return '#FFA726';
+            case 'baixo':
+                return '#FF6B6B';
+            case 'nenhum':
+                return '#808080';
+            default:
+                return '#808080';
         }
     }
 
-    calculateStats(users: User[]): { total: number; averageProgress: number; engagement: string } {
+    calculateStats(users: User[]): {
+        total: number;
+        averageProgress: number;
+        engagement: string;
+    } {
         return this.usersService.calculateStats(users);
     }
 
     /**
      * Calcula estatísticas usando dados da API
      */
-    calculateStatsFromAPI(users: User[], progressStatistics?: any): { total: number; averageProgress: number; engagement: string } {
+    calculateStatsFromAPI(
+        users: User[],
+        progressStatistics?: any,
+    ): { total: number; averageProgress: number; engagement: string } {
         return this.usersService.calculateStatsFromAPI(users, progressStatistics);
     }
 
@@ -998,20 +1045,28 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         if (!users.length) return 'Nenhum';
 
         // Mapeia os engajamentos para valores numéricos para calcular a média
-        const engagementValues = users.map(user => {
+        const engagementValues = users.map((user) => {
             const engagement = this.getUserEngagement(user);
             switch (engagement) {
-                case 'Nenhum': return 0;
-                case 'Baixo': return 1;
-                case 'Médio': return 2;
-                case 'Alto': return 3;
-                case 'Altíssimo': return 4;
-                default: return 0;
+                case 'Nenhum':
+                    return 0;
+                case 'Baixo':
+                    return 1;
+                case 'Médio':
+                    return 2;
+                case 'Alto':
+                    return 3;
+                case 'Altíssimo':
+                    return 4;
+                default:
+                    return 0;
             }
         });
 
         // Calcula a média
-        const averageValue = engagementValues.reduce((sum: number, value: number) => sum + value, 0) / users.length;
+        const averageValue =
+            engagementValues.reduce((sum: number, value: number) => sum + value, 0) /
+            users.length;
 
         // Converte de volta para string
         if (averageValue === 0) return 'Nenhum';
@@ -1051,23 +1106,28 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             const tabState = {
                 cargoId: this.cargo.id,
                 activeTab: this.activeTab,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             };
-            localStorage.setItem(`cargoTabState_${this.cargo.id}`, JSON.stringify(tabState));
+            localStorage.setItem(
+                `cargoTabState_${this.cargo.id}`,
+                JSON.stringify(tabState),
+            );
         }
     }
 
     private restoreTabState(): void {
         if (this.cargo?.id) {
             try {
-                const savedTabState = localStorage.getItem(`cargoTabState_${this.cargo.id}`);
+                const savedTabState = localStorage.getItem(
+                    `cargoTabState_${this.cargo.id}`,
+                );
                 if (savedTabState) {
                     const tabState = JSON.parse(savedTabState);
                     const now = Date.now();
                     const oneHour = 60 * 60 * 1000; // 1 hora em millisegundos
 
                     // Restaurar apenas se o estado foi salvo há menos de 1 hora
-                    if (tabState.timestamp && (now - tabState.timestamp) < oneHour) {
+                    if (tabState.timestamp && now - tabState.timestamp < oneHour) {
                         this.activeTab = tabState.activeTab || 'conteudo';
                     } else {
                         // Limpar estado expirado
@@ -1097,7 +1157,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         if (this.cargo) {
             const updatedCargo = {
                 ...this.cargo,
-                users_count: (this.cargo.users_count || 0) + 1
+                users_count: (this.cargo.users_count || 0) + 1,
             };
             this.cargo = updatedCargo;
             this.cargoUpdated.emit(updatedCargo);
@@ -1116,7 +1176,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         // Atualiza a lista local e o observable imediatamente
         if (tool) {
             // Verificar se a ferramenta já existe na lista atual
-            const existingToolIndex = this.tools.findIndex(t => t.id === tool.id);
+            const existingToolIndex = this.tools.findIndex((t) => t.id === tool.id);
             let updatedTools: Tool[];
 
             if (existingToolIndex !== -1) {
@@ -1157,15 +1217,21 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             const newModule: Module = {
                 id: module.id || Date.now(),
                 name: module.name,
-                thumbnail_url: module.thumbnail_url || '/assets/images/default-module.jpg',
+                thumbnail_url:
+                    module.thumbnail_url || '/assets/images/default-module.jpg',
                 contentCount: 0,
-                lessons: []
+                lessons: [],
             };
 
-            console.log(`🆕 Módulo criado:`, { id: newModule.id, name: newModule.name });
+            console.log(`🆕 Módulo criado:`, {
+                id: newModule.id,
+                name: newModule.name,
+            });
 
             // Verificar se o módulo já existe na lista atual
-            const existingModuleIndex = this.modules.findIndex(m => m.id === newModule.id);
+            const existingModuleIndex = this.modules.findIndex(
+                (m) => m.id === newModule.id,
+            );
             let updatedModules: Module[];
 
             if (existingModuleIndex !== -1) {
@@ -1210,7 +1276,9 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
     onLessonCreated(lesson: any): void {
         // Atualizar o módulo local com a nova aula
         if (lesson && this.addLessonModuleId) {
-            const moduleIndex = this.modules.findIndex(m => m.id === this.addLessonModuleId);
+            const moduleIndex = this.modules.findIndex(
+                (m) => m.id === this.addLessonModuleId,
+            );
             if (moduleIndex !== -1) {
                 const updatedModules = [...this.modules];
                 const module = { ...updatedModules[moduleIndex] };
@@ -1221,15 +1289,16 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                     uuid: lesson.uuid || '',
                     name: lesson.name,
                     description: lesson.description || '',
-                    thumbnail_url: lesson.thumbnail_url || '/assets/images/default-lesson.jpg',
+                    thumbnail_url:
+                        lesson.thumbnail_url || '/assets/images/default-lesson.jpg',
                     video_url: lesson.video_url || '',
                     created_at: lesson.created_at || new Date().toISOString(),
                     updated_at: lesson.updated_at || new Date().toISOString(),
                     deleted_at: null,
                     pivot: {
                         module_id: this.addLessonModuleId,
-                        lesson_id: lesson.id || Date.now()
-                    }
+                        lesson_id: lesson.id || Date.now(),
+                    },
                 };
 
                 module.lessons = [...(module.lessons || []), newLesson];
@@ -1281,7 +1350,8 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         // Iniciar salvamento
         this.supportSavingSubject.next(true);
 
-        this.supportService.updateSupport(phone, email, roleName, roleId)
+        this.supportService
+            .updateSupport(phone, email, roleName, roleId)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next: (result) => {
@@ -1302,7 +1372,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                     // Finalizar salvamento
                     this.supportSavingSubject.next(false);
                     // Aqui você pode adicionar uma notificação de erro se desejar
-                }
+                },
             });
     }
 
@@ -1310,8 +1380,10 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
     hasSupportChanges(): boolean {
         if (!this.support) return this.isEditingWhatsapp || this.isEditingEmail;
 
-        const phoneChanged = this.isEditingWhatsapp && this.supportPhone !== this.support.phone;
-        const emailChanged = this.isEditingEmail && this.supportEmail !== this.support.email;
+        const phoneChanged =
+            this.isEditingWhatsapp && this.supportPhone !== this.support.phone;
+        const emailChanged =
+            this.isEditingEmail && this.supportEmail !== this.support.email;
 
         return phoneChanged || emailChanged;
     }
@@ -1359,35 +1431,40 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             return;
         }
 
-        this.rolesService.updateRole(this.cargo.id, updates).pipe(takeUntil(this.destroy$)).subscribe({
-            next: (updatedRole) => {
-                // Cria o cargo atualizado usando os valores locais (mais confiável)
-                const updatedCargo = {
-                    ...this.cargo!,
-                    name: this.isEditingCourseName ? this.courseName : this.cargo!.name,
-                    custom_url: this.isEditingCustomUrl ? this.customUrl : this.cargo!.custom_url
-                };
+        this.rolesService
+            .updateRole(this.cargo.id, updates)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+                next: (updatedRole) => {
+                    // Cria o cargo atualizado usando os valores locais (mais confiável)
+                    const updatedCargo = {
+                        ...this.cargo!,
+                        name: this.isEditingCourseName ? this.courseName : this.cargo!.name,
+                        custom_url: this.isEditingCustomUrl
+                            ? this.customUrl
+                            : this.cargo!.custom_url,
+                    };
 
-                // Atualiza o cargo local do componente
-                this.cargo = updatedCargo;
+                    // Atualiza o cargo local do componente
+                    this.cargo = updatedCargo;
 
-                // CRÍTICO: Força a limpeza do cache do serviço para garantir sincronização
-                this.rolesService.clearCache();
+                    // CRÍTICO: Força a limpeza do cache do serviço para garantir sincronização
+                    this.rolesService.clearCache();
 
-                // Atualiza o localStorage do dashboardState
-                this.updateDashboardState(updatedCargo);
+                    // Atualiza o localStorage do dashboardState
+                    this.updateDashboardState(updatedCargo);
 
-                // Emite evento para o componente pai (atualização local)
-                this.cargoUpdated.emit(updatedCargo);
+                    // Emite evento para o componente pai (atualização local)
+                    this.cargoUpdated.emit(updatedCargo);
 
-                this.isEditingCourseName = false;
-                this.isEditingCustomUrl = false;
-            },
-            error: (error) => {
-                console.error('❌ Erro ao atualizar cargo:', error);
-                // Aqui você pode adicionar uma notificação de erro se desejar
-            }
-        });
+                    this.isEditingCourseName = false;
+                    this.isEditingCustomUrl = false;
+                },
+                error: (error) => {
+                    console.error('❌ Erro ao atualizar cargo:', error);
+                    // Aqui você pode adicionar uma notificação de erro se desejar
+                },
+            });
     }
 
     private updateDashboardState(updatedCargo: Role): void {
@@ -1404,7 +1481,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                 // Se não existe estado salvo, cria um novo
                 const newState = {
                     selectedCargo: updatedCargo,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
                 };
                 localStorage.setItem('dashboardState', JSON.stringify(newState));
             }
@@ -1412,9 +1489,12 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             // Também salva no localStorage específico do cargo para persistência
             const cargoState = {
                 cargo: updatedCargo,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             };
-            localStorage.setItem(`cargo_${updatedCargo.id}`, JSON.stringify(cargoState));
+            localStorage.setItem(
+                `cargo_${updatedCargo.id}`,
+                JSON.stringify(cargoState),
+            );
         } catch (error) {
             console.error('Erro ao atualizar dashboardState:', error);
         }
@@ -1435,7 +1515,8 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         this.cargo = { ...this.cargo, active: newActiveStatus };
 
         // Chama o serviço para atualizar no backend
-        this.rolesService.updateRole(this.cargo.id, { active: newActiveStatus })
+        this.rolesService
+            .updateRole(this.cargo.id, { active: newActiveStatus })
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next: (updatedRole) => {
@@ -1452,7 +1533,7 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
                     console.error('❌ Erro ao atualizar status do cargo:', error);
                     // Reverte o estado em caso de erro
                     this.cargo = { ...this.cargo!, active: !newActiveStatus };
-                }
+                },
             });
     }
 
@@ -1492,11 +1573,13 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
     }
     onAddExistingUserModal(newUsers: any[]): void {
         this.showAddExistingUserModal = false;
-        const filteredNewUsers = newUsers.filter(u => !this.users.some(existing => existing.id === u.id));
+        const filteredNewUsers = newUsers.filter(
+            (u) => !this.users.some((existing) => existing.id === u.id),
+        );
         if (filteredNewUsers.length === 0) return;
 
         // Mapear usuários para incluir dados de progresso
-        const mappedUsers = filteredNewUsers.map(user => ({
+        const mappedUsers = filteredNewUsers.map((user) => ({
             id: user.id,
             name: user.name,
             email: user.email,
@@ -1508,37 +1591,52 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             module_progress: user.module_progress || [],
             lesson_progress: user.lesson_progress || [],
             progress_summary: user.progress_summary || {
-                modules: { total: 0, completed: 0, average_progress: 0, total_progress: 0 },
-                lessons: { total: 0, completed: 0, average_progress: 0, total_progress: 0 },
-                overall: { total_items: 0, completed_items: 0, average_progress: 0 }
-            }
+                modules: {
+                    total: 0,
+                    completed: 0,
+                    average_progress: 0,
+                    total_progress: 0,
+                },
+                lessons: {
+                    total: 0,
+                    completed: 0,
+                    average_progress: 0,
+                    total_progress: 0,
+                },
+                overall: { total_items: 0, completed_items: 0, average_progress: 0 },
+            },
         }));
 
         // Atualiza o array local
         this.users = [...this.users, ...mappedUsers];
 
         // Adiciona ao cache local de usuários adicionados manualmente
-        this.locallyAddedUsers = [...this.locallyAddedUsers, ...mappedUsers.filter(u => !this.locallyAddedUsers.some(lu => lu.id === u.id))];
+        this.locallyAddedUsers = [
+            ...this.locallyAddedUsers,
+            ...mappedUsers.filter(
+                (u) => !this.locallyAddedUsers.some((lu) => lu.id === u.id),
+            ),
+        ];
         this.saveLocallyAddedUsersToStorage();
 
         // Atualiza o estado global do serviço para refletir imediatamente na UI, sem duplicar
         const currentState = this.usersService['usersStateSubject'].value;
         const newGlobalUsers = [...currentState.users];
-        mappedUsers.forEach(u => {
-            if (!newGlobalUsers.some(existing => existing.id === u.id)) {
+        mappedUsers.forEach((u) => {
+            if (!newGlobalUsers.some((existing) => existing.id === u.id)) {
                 newGlobalUsers.push(u);
             }
         });
         this.usersService['usersStateSubject'].next({
             ...currentState,
-            users: newGlobalUsers
+            users: newGlobalUsers,
         });
 
         // Atualiza o contador de usuários do cargo
         if (this.cargo) {
             const updatedCargo = {
                 ...this.cargo,
-                users_count: (this.cargo.users_count || 0) + mappedUsers.length
+                users_count: (this.cargo.users_count || 0) + mappedUsers.length,
             };
             this.cargo = updatedCargo;
             this.cargoUpdated.emit(updatedCargo);
@@ -1576,14 +1674,21 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
     onAddExistingToolModal(newTools: any[]): void {
         this.showAddExistingToolModal = false;
 
-        const filteredNewTools = newTools.filter(t => !this.tools.some((existing: Tool) => existing.id === t.id));
+        const filteredNewTools = newTools.filter(
+            (t) => !this.tools.some((existing: Tool) => existing.id === t.id),
+        );
         if (filteredNewTools.length === 0) return;
 
         // Atualiza o array local
         this.tools = [...this.tools, ...filteredNewTools];
 
         // Adiciona ao cache local de ferramentas adicionadas manualmente
-        this.locallyAddedTools = [...this.locallyAddedTools, ...filteredNewTools.filter(t => !this.locallyAddedTools.some(lt => lt.id === t.id))];
+        this.locallyAddedTools = [
+            ...this.locallyAddedTools,
+            ...filteredNewTools.filter(
+                (t) => !this.locallyAddedTools.some((lt) => lt.id === t.id),
+            ),
+        ];
         this.saveLocallyAddedToolsToStorage();
 
         this.toolsSubject.next(this.tools);
@@ -1622,7 +1727,9 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
     onAddExistingModuleModal(newModules: Module[]): void {
         this.showAddExistingModuleModal = false;
 
-        const filteredNewModules = newModules.filter(m => !this.modules.some(existing => existing.id === m.id));
+        const filteredNewModules = newModules.filter(
+            (m) => !this.modules.some((existing) => existing.id === m.id),
+        );
         if (filteredNewModules.length === 0) return;
 
         // Atualiza o array local
@@ -1637,18 +1744,19 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
 
         // Salvar módulos adicionados no cache local para persistência
         if (this.cargo?.id) {
-            const existingLocalModules = this.localModulesCache.get(this.cargo.id) || [];
+            const existingLocalModules =
+                this.localModulesCache.get(this.cargo.id) || [];
 
             // Usar Map para garantir IDs únicos no cache local
             const localModulesMap = new Map<number, Module>();
 
             // Adicionar módulos existentes
-            existingLocalModules.forEach(module => {
+            existingLocalModules.forEach((module) => {
                 localModulesMap.set(module.id, module);
             });
 
             // Adicionar novos módulos apenas se não existirem
-            filteredNewModules.forEach(module => {
+            filteredNewModules.forEach((module) => {
                 if (!localModulesMap.has(module.id)) {
                     localModulesMap.set(module.id, module);
                 }
@@ -1669,22 +1777,27 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
     }
 
     get moduleUserIds(): number[] {
-        return this.users ? this.users.map(u => u.id) : [];
+        return this.users ? this.users.map((u) => u.id) : [];
     }
 
     get moduleIds(): number[] {
-        return this.modules ? this.modules.map(m => m.id) : [];
+        return this.modules ? this.modules.map((m) => m.id) : [];
     }
 
     private loadLocalModulesFromStorage(): void {
         if (this.cargo?.id) {
-            const savedModules = localStorage.getItem(`localModules_${this.cargo.id}`);
+            const savedModules = localStorage.getItem(
+                `localModules_${this.cargo.id}`,
+            );
             if (savedModules) {
                 try {
                     const parsedModules = JSON.parse(savedModules);
                     this.localModulesCache.set(this.cargo.id, parsedModules);
                 } catch (error) {
-                    console.error('Erro ao carregar módulos locais do localStorage:', error);
+                    console.error(
+                        'Erro ao carregar módulos locais do localStorage:',
+                        error,
+                    );
                 }
             }
         }
@@ -1693,7 +1806,10 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
     private saveLocalModulesToStorage(): void {
         if (this.cargo?.id) {
             try {
-                localStorage.setItem(`localModules_${this.cargo.id}`, JSON.stringify(this.localModulesCache.get(this.cargo.id) || []));
+                localStorage.setItem(
+                    `localModules_${this.cargo.id}`,
+                    JSON.stringify(this.localModulesCache.get(this.cargo.id) || []),
+                );
             } catch (error) {
                 console.error('Erro ao salvar módulos locais no localStorage:', error);
             }
@@ -1711,15 +1827,19 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
     // Método para limpar módulos locais que já foram sincronizados com o servidor
     private clearSyncedLocalModules(serverModuleIds: number[]): void {
         if (this.cargo?.id) {
-            const existingLocalModules = this.localModulesCache.get(this.cargo.id) || [];
-            const unsyncedModules = existingLocalModules.filter(module =>
-                !serverModuleIds.includes(module.id)
+            const existingLocalModules =
+                this.localModulesCache.get(this.cargo.id) || [];
+            const unsyncedModules = existingLocalModules.filter(
+                (module) => !serverModuleIds.includes(module.id),
             );
 
             // Se houve mudança (módulos foram removidos do cache local), atualizar
             if (unsyncedModules.length !== existingLocalModules.length) {
-                const removedCount = existingLocalModules.length - unsyncedModules.length;
-                console.log(`🧹 Removendo ${removedCount} módulos sincronizados do cache local`);
+                const removedCount =
+                    existingLocalModules.length - unsyncedModules.length;
+                console.log(
+                    `🧹 Removendo ${removedCount} módulos sincronizados do cache local`,
+                );
                 this.localModulesCache.set(this.cargo.id, unsyncedModules);
                 this.saveLocalModulesToStorage();
             }
@@ -1729,8 +1849,8 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
     // Método para limpar ferramentas locais que já foram sincronizadas com o servidor
     private clearSyncedLocalTools(serverToolIds: number[]): void {
         const existingLocalTools = this.locallyAddedTools || [];
-        const unsyncedTools = existingLocalTools.filter(tool =>
-            !serverToolIds.includes(tool.id)
+        const unsyncedTools = existingLocalTools.filter(
+            (tool) => !serverToolIds.includes(tool.id),
         );
 
         // Se houve mudança (ferramentas foram removidas do cache local), atualizar
@@ -1747,19 +1867,21 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             this.clearLocalModules();
 
             // Recarregar do servidor
-            this.moduleService.refreshModules(this.cargo.name, this.cargo.id).subscribe({
-                next: (modules) => {
-                    // Atualizar o estado global do ModuleService para sincronização em tempo real
-                    this.moduleService.modulesSubject.next(modules || []);
+            this.moduleService
+                .refreshModules(this.cargo.name, this.cargo.id)
+                .subscribe({
+                    next: (modules) => {
+                        // Atualizar o estado global do ModuleService para sincronização em tempo real
+                        this.moduleService.modulesSubject.next(modules || []);
 
-                    // Manter estado local para compatibilidade
-                    this.modules = modules || [];
-                    this.modulesSubject.next(this.modules);
-                },
-                error: (error) => {
-                    console.error('Erro ao atualizar módulos:', error);
-                }
-            });
+                        // Manter estado local para compatibilidade
+                        this.modules = modules || [];
+                        this.modulesSubject.next(this.modules);
+                    },
+                    error: (error) => {
+                        console.error('Erro ao atualizar módulos:', error);
+                    },
+                });
         }
     }
 
@@ -1768,14 +1890,16 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         // Se há mais usuários do que uma página, buscar na API
         if (this.users.length > this.usersPerPage && term.trim()) {
             if (this.userSearchSub) this.userSearchSub.unsubscribe();
-            this.userSearchSub = this.usersService.searchUsersByName(term.trim()).subscribe({
-                next: (users) => {
-                    this.filteredUsers = users;
-                },
-                error: () => {
-                    this.filteredUsers = [];
-                }
-            });
+            this.userSearchSub = this.usersService
+                .searchUsersByName(term.trim())
+                .subscribe({
+                    next: (users) => {
+                        this.filteredUsers = users;
+                    },
+                    error: () => {
+                        this.filteredUsers = [];
+                    },
+                });
         } else {
             this.applyUserFilter();
         }
@@ -1788,9 +1912,10 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
             if (!term) {
                 this.filteredUsers = [...this.users];
             } else {
-                this.filteredUsers = this.users.filter(user =>
-                    user.name.toLowerCase().includes(term) ||
-                    user.email.toLowerCase().includes(term)
+                this.filteredUsers = this.users.filter(
+                    (user) =>
+                        user.name.toLowerCase().includes(term) ||
+                        user.email.toLowerCase().includes(term),
                 );
             }
         } else {
@@ -1809,23 +1934,32 @@ export class AdminCargoDetailComponent implements OnInit, AfterViewInit, OnDestr
         if (!term) {
             this.filteredTools = [...this.tools];
         } else {
-            this.filteredTools = this.tools.filter(tool =>
-                tool.name.toLowerCase().includes(term)
+            this.filteredTools = this.tools.filter((tool) =>
+                tool.name.toLowerCase().includes(term),
             );
         }
     }
 
     // --- Engajamento SVG ---
     get averageEngagementLevel(): number {
-        const users = this.filteredUsers && this.filteredUsers.length ? this.filteredUsers : this.users;
+        const users =
+            this.filteredUsers && this.filteredUsers.length
+                ? this.filteredUsers
+                : this.users;
         const engagement = this.getAverageEngagement(users);
         switch (engagement) {
-            case 'Nenhum': return 0;
-            case 'Baixo': return 1;
-            case 'Médio': return 2;
-            case 'Alto': return 3;
-            case 'Altíssimo': return 4;
-            default: return 0;
+            case 'Nenhum':
+                return 0;
+            case 'Baixo':
+                return 1;
+            case 'Médio':
+                return 2;
+            case 'Alto':
+                return 3;
+            case 'Altíssimo':
+                return 4;
+            default:
+                return 0;
         }
     }
-} 
+}
