@@ -674,4 +674,16 @@
         (close)="onCloseAddExistingToolModal()" (add)="onAddExistingToolModal($event)"></app-add-existing-tool>
     <app-add-existing-module *ngIf="showAddExistingModuleModal" [moduleIds]="moduleIds" [roleId]="cargo?.id ?? 0"
         (close)="onCloseAddExistingModuleModal()" (add)="onAddExistingModuleModal($event)"></app-add-existing-module>
+
+    <app-confirm-modal *ngIf="confirmModalOpen"
+        [title]="confirmModalTitle"
+        [message]="confirmModalMessage"
+        [confirmLabel]="confirmModalConfirmLabel"
+        cancelLabel="Cancelar"
+        [icon]="confirmModalIcon"
+        confirmClass="danger"
+        [loading]="isDeletingTarget"
+        (confirm)="onConfirmDelete()"
+        (cancel)="onCancelDelete()">
+    </app-confirm-modal>
 </div>

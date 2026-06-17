@@ -33,6 +33,7 @@ import { SvgIconPipe } from '../../pipes/svg-icon.pipe';
 import { AddExistingUserComponent } from '../add-existing-user/add-existing-user.component';
 import { AddExistingToolComponent } from '../add-existing-tool/add-existing-tool.component';
 import { AddExistingModuleComponent } from '../add-existing-module/add-existing-module.component';
+import { ConfirmModalComponent } from '../confirm-modal/confirm-modal.component';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -49,6 +50,7 @@ import { AuthService } from '../../services/auth.service';
         AddExistingUserComponent,
         AddExistingToolComponent,
         AddExistingModuleComponent,
+        ConfirmModalComponent,
     ],
     templateUrl: './admin-cargo-detail.component.html',
     styleUrls: ['./admin-cargo-detail.component.scss'],
@@ -214,6 +216,17 @@ export class AdminCargoDetailComponent
     dropdownModuleIndex: number | null = null;
     dropdownLessonIndex: number | null = null;
 
+    confirmModalOpen = false;
+    confirmModalTarget: {
+        action: 'deleteModule' | 'deleteModuleFromRole' | 'deleteLesson' | 'deleteLessonFromModule'
+            | 'deleteUser' | 'deleteUserFromRole' | 'deleteTool' | 'deleteToolFromRole';
+        module?: Module;
+        lesson?: Lesson;
+        user?: User;
+        tool?: Tool;
+    } | null = null;
+    isDeletingTarget = false;
+
     showToolActionsDropdown(index: number, event: MouseEvent): void {
         event.stopPropagation();
         this.dropdownToolIndex = index;
@@ -271,196 +284,198 @@ export class AdminCargoDetailComponent
     }
 
     onDeleteTool(tool: Tool): void {
-        const token = this.authService.getToken() || '';
-        this.toolsService.deleteTool(tool.id, token).subscribe({
-            next: () => {
-                this.filteredTools = this.filteredTools.filter((t) => t.id !== tool.id);
-                this.tools = this.tools.filter((t) => t.id !== tool.id);
-                // Remove do cache local e do localStorage
-                this.removeLocallyAddedTool(tool.id);
-                this.hideToolActionsDropdown();
-            },
-            error: () => {
-                // Aqui você pode exibir uma notificação de erro se desejar
-                this.hideToolActionsDropdown();
-            },
-        });
+        this.confirmModalTarget = { action: 'deleteTool', tool };
+        this.confirmModalOpen = true;
+        this.hideToolActionsDropdown();
     }
 
     onDeleteToolFromRole(tool: Tool): void {
-        if (!this.cargo) return;
-        const token = this.authService.getToken() || '';
-        const roleId = this.cargo.id;
-        this.toolsService.deleteToolFromRole(tool.id, roleId, token).subscribe({
-            next: () => {
-                this.filteredTools = this.filteredTools.filter((t) => t.id !== tool.id);
-                this.tools = this.tools.filter((t) => t.id !== tool.id);
-                // Remove do cache local e do localStorage
-                this.removeLocallyAddedTool(tool.id);
-                // Atualiza o observable global do serviço para refletir a remoção
-                const currentState = this.toolsService.toolsSubject.value;
-                if (currentState) {
-                    this.toolsService.toolsSubject.next({
-                        ...currentState,
-                        tools: currentState.tools.filter((t: any) => t.id !== tool.id),
-                    });
-                }
-                this.hideToolActionsDropdown();
-            },
-            error: () => {
-                this.hideToolActionsDropdown();
-            },
-        });
+        this.confirmModalTarget = { action: 'deleteToolFromRole', tool };
+        this.confirmModalOpen = true;
+        this.hideToolActionsDropdown();
     }
 
     onDeleteModule(module: Module): void {
-        const token = this.authService.getToken() || '';
-        this.moduleService.deleteModule(module.id, token).subscribe({
-            next: () => {
-                this.modules = this.modules.filter((m) => m.id !== module.id);
-                this.modulesSubject.next(this.modules);
-                // Remove do cache local
-                if (this.cargo?.id) {
-                    const existingLocalModules =
-                        this.localModulesCache.get(this.cargo.id) || [];
-                    const updatedLocalModules = existingLocalModules.filter(
-                        (m) => m.id !== module.id,
-                    );
-                    this.localModulesCache.set(this.cargo.id, updatedLocalModules);
-                    this.saveLocalModulesToStorage();
-                }
-                this.hideModuleActionsDropdown();
-            },
-            error: () => {
-                this.hideModuleActionsDropdown();
-            },
-        });
+        this.confirmModalTarget = { action: 'deleteModule', module };
+        this.confirmModalOpen = true;
+        this.hideModuleActionsDropdown();
     }
 
     onDeleteModuleFromRole(module: Module): void {
-        if (!this.cargo) return;
-        const token = this.authService.getToken() || '';
-        const roleId = this.cargo.id;
-        this.moduleService
-            .deleteModuleFromRole(module.id, roleId, token)
-            .subscribe({
-                next: () => {
-                    this.modules = this.modules.filter((m) => m.id !== module.id);
-                    this.modulesSubject.next(this.modules);
-                    // Remove do cache local
-                    if (this.cargo?.id) {
-                        const existingLocalModules =
-                            this.localModulesCache.get(this.cargo.id) || [];
-                        const updatedLocalModules = existingLocalModules.filter(
-                            (m) => m.id !== module.id,
-                        );
-                        this.localModulesCache.set(this.cargo.id, updatedLocalModules);
-                        this.saveLocalModulesToStorage();
-                    }
-                    this.hideModuleActionsDropdown();
-                },
-                error: () => {
-                    this.hideModuleActionsDropdown();
-                },
-            });
+        this.confirmModalTarget = { action: 'deleteModuleFromRole', module };
+        this.confirmModalOpen = true;
+        this.hideModuleActionsDropdown();
     }
 
     onDeleteLesson(lesson: Lesson, module: Module): void {
-        const token = this.authService.getToken() || '';
-        this.lessonService.deleteLesson(lesson.id, token).subscribe({
-            next: () => {
-                // The global lesson deletion event will handle module refresh
-                this.hideLessonActionsDropdown();
-            },
-            error: () => {
-                this.hideLessonActionsDropdown();
-            },
-        });
+        this.confirmModalTarget = { action: 'deleteLesson', module, lesson };
+        this.confirmModalOpen = true;
+        this.hideLessonActionsDropdown();
     }
 
     onDeleteLessonFromModule(lesson: Lesson, module: Module): void {
+        this.confirmModalTarget = { action: 'deleteLessonFromModule', module, lesson };
+        this.confirmModalOpen = true;
+        this.hideLessonActionsDropdown();
+    }
+
+    onConfirmDelete(): void {
+        if (!this.confirmModalTarget) return;
+        this.isDeletingTarget = true;
+        const { action, module, lesson, user, tool } = this.confirmModalTarget;
         const token = this.authService.getToken() || '';
-        this.lessonService
-            .deleteLessonFromModule(lesson.id, module.id, token)
-            .subscribe({
-                next: () => {
-                    // The global lesson deletion event will handle module refresh
-                    this.hideLessonActionsDropdown();
-                },
-                error: () => {
-                    this.hideLessonActionsDropdown();
-                },
-            });
+
+        switch (action) {
+            case 'deleteModule':
+                this.moduleService.deleteModule(module!.id, token).subscribe({
+                    next: () => {
+                        this.modules = this.modules.filter((m) => m.id !== module!.id);
+                        this.modulesSubject.next(this.modules);
+                        if (this.cargo?.id) {
+                            const existing = this.localModulesCache.get(this.cargo.id) || [];
+                            const updated = existing.filter((m) => m.id !== module!.id);
+                            this.localModulesCache.set(this.cargo.id, updated);
+                            this.saveLocalModulesToStorage();
+                        }
+                        this.resetDeleteState();
+                    },
+                    error: () => this.resetDeleteState(),
+                });
+                break;
+            case 'deleteModuleFromRole':
+                if (!this.cargo) return this.resetDeleteState();
+                this.moduleService.deleteModuleFromRole(module!.id, this.cargo.id, token).subscribe({
+                    next: () => {
+                        this.modules = this.modules.filter((m) => m.id !== module!.id);
+                        this.modulesSubject.next(this.modules);
+                        if (this.cargo?.id) {
+                            const existing = this.localModulesCache.get(this.cargo.id) || [];
+                            const updated = existing.filter((m) => m.id !== module!.id);
+                            this.localModulesCache.set(this.cargo.id, updated);
+                            this.saveLocalModulesToStorage();
+                        }
+                        this.resetDeleteState();
+                    },
+                    error: () => this.resetDeleteState(),
+                });
+                break;
+            case 'deleteLesson':
+                this.lessonService.deleteLesson(lesson!.id, token).subscribe({
+                    next: () => this.resetDeleteState(),
+                    error: () => this.resetDeleteState(),
+                });
+                break;
+            case 'deleteLessonFromModule':
+                this.lessonService.deleteLessonFromModule(lesson!.id, module!.id, token).subscribe({
+                    next: () => this.resetDeleteState(),
+                    error: () => this.resetDeleteState(),
+                });
+                break;
+            case 'deleteUser':
+                this.usersService.deleteUser(user!.id, token).subscribe({
+                    next: () => {
+                        this.filteredUsers = this.filteredUsers.filter((u) => u.id !== user!.id);
+                        this.users = this.users.filter((u) => u.id !== user!.id);
+                        this.removeLocallyAddedUser(user!.id);
+                        if (this.cargo?.name) {
+                            this.usersService.clearCache(this.cargo.name);
+                            this.loadUsers();
+                        }
+                        this.resetDeleteState();
+                    },
+                    error: () => this.resetDeleteState(),
+                });
+                break;
+            case 'deleteUserFromRole':
+                if (!this.cargo) return this.resetDeleteState();
+                this.usersService.deleteUserFromRole(user!.id, this.cargo.id, token).subscribe({
+                    next: () => {
+                        this.filteredUsers = this.filteredUsers.filter((u) => u.id !== user!.id);
+                        this.users = this.users.filter((u) => u.id !== user!.id);
+                        this.removeLocallyAddedUser(user!.id);
+                        const currentState = this.usersService['usersStateSubject'].value;
+                        this.usersService['usersStateSubject'].next({
+                            ...currentState,
+                            users: currentState.users.filter((u: any) => u.id !== user!.id),
+                        });
+                        if (this.cargo?.name) {
+                            const cacheKey = `${this.cargo.name}_1_5`;
+                            const cached = this.usersService['cache'].get(cacheKey);
+                            if (cached) {
+                                const updatedUsers = cached.data.users.filter(
+                                    (u: any) => u.id !== user!.id,
+                                );
+                                this.usersService['cache'].set(cacheKey, {
+                                    ...cached,
+                                    data: { ...cached.data, users: updatedUsers },
+                                });
+                            }
+                        }
+                        if (this.cargo && typeof this.cargo.users_count === 'number') {
+                            this.cargo = {
+                                ...this.cargo,
+                                users_count: Math.max(0, this.cargo.users_count - 1),
+                            };
+                            this.cargoUpdated.emit(this.cargo);
+                        }
+                        this.resetDeleteState();
+                    },
+                    error: () => this.resetDeleteState(),
+                });
+                break;
+            case 'deleteTool':
+                this.toolsService.deleteTool(tool!.id, token).subscribe({
+                    next: () => {
+                        this.filteredTools = this.filteredTools.filter((t) => t.id !== tool!.id);
+                        this.tools = this.tools.filter((t) => t.id !== tool!.id);
+                        this.removeLocallyAddedTool(tool!.id);
+                        this.resetDeleteState();
+                    },
+                    error: () => this.resetDeleteState(),
+                });
+                break;
+            case 'deleteToolFromRole':
+                if (!this.cargo) return this.resetDeleteState();
+                this.toolsService.deleteToolFromRole(tool!.id, this.cargo.id, token).subscribe({
+                    next: () => {
+                        this.filteredTools = this.filteredTools.filter((t) => t.id !== tool!.id);
+                        this.tools = this.tools.filter((t) => t.id !== tool!.id);
+                        this.removeLocallyAddedTool(tool!.id);
+                        const currentState = this.toolsService.toolsSubject.value;
+                        if (currentState) {
+                            this.toolsService.toolsSubject.next({
+                                ...currentState,
+                                tools: currentState.tools.filter((t: any) => t.id !== tool!.id),
+                            });
+                        }
+                        this.resetDeleteState();
+                    },
+                    error: () => this.resetDeleteState(),
+                });
+                break;
+        }
+    }
+
+    onCancelDelete(): void {
+        this.resetDeleteState();
+    }
+
+    private resetDeleteState(): void {
+        this.isDeletingTarget = false;
+        this.confirmModalOpen = false;
+        this.confirmModalTarget = null;
     }
 
     onDeleteUser(user: User): void {
-        const token = this.authService.getToken() || '';
-        this.usersService.deleteUser(user.id, token).subscribe({
-            next: () => {
-                this.filteredUsers = this.filteredUsers.filter((u) => u.id !== user.id);
-                this.users = this.users.filter((u) => u.id !== user.id);
-                // Remove do cache local e do localStorage
-                this.removeLocallyAddedUser(user.id);
-                this.hideUserActionsDropdown();
-                // Limpa o cache e recarrega os usuários
-                if (this.cargo?.name) {
-                    this.usersService.clearCache(this.cargo.name);
-                    this.loadUsers();
-                }
-            },
-            error: () => {
-                this.hideUserActionsDropdown();
-            },
-        });
+        this.confirmModalTarget = { action: 'deleteUser', user };
+        this.confirmModalOpen = true;
+        this.hideUserActionsDropdown();
     }
 
     onDeleteUserFromModule(user: User): void {
-        if (!this.cargo) return;
-        const token = this.authService.getToken() || '';
-        const roleId = this.cargo.id;
-        this.usersService.deleteUserFromRole(user.id, roleId, token).subscribe({
-            next: () => {
-                this.filteredUsers = this.filteredUsers.filter((u) => u.id !== user.id);
-                this.users = this.users.filter((u) => u.id !== user.id);
-                // Remove do cache local e do localStorage
-                this.removeLocallyAddedUser(user.id);
-                // Atualiza o observable global do serviço para refletir a remoção
-                const currentState = this.usersService['usersStateSubject'].value;
-                this.usersService['usersStateSubject'].next({
-                    ...currentState,
-                    users: currentState.users.filter((u: any) => u.id !== user.id),
-                });
-                // Atualiza o cache interno do serviço para refletir a remoção
-                if (this.cargo?.name) {
-                    const cacheKey = `${this.cargo.name}_1_5`;
-                    const cached = this.usersService['cache'].get(cacheKey);
-                    if (cached) {
-                        const updatedUsers = cached.data.users.filter(
-                            (u: any) => u.id !== user.id,
-                        );
-                        this.usersService['cache'].set(cacheKey, {
-                            ...cached,
-                            data: {
-                                ...cached.data,
-                                users: updatedUsers,
-                            },
-                        });
-                    }
-                }
-                // Atualiza o contador de usuários do cargo localmente e emite para o dashboard
-                if (this.cargo && typeof this.cargo.users_count === 'number') {
-                    this.cargo = {
-                        ...this.cargo,
-                        users_count: Math.max(0, this.cargo.users_count - 1),
-                    };
-                    this.cargoUpdated.emit(this.cargo);
-                }
-                this.hideUserActionsDropdown();
-            },
-            error: () => {
-                this.hideUserActionsDropdown();
-            },
-        });
+        this.confirmModalTarget = { action: 'deleteUserFromRole', user };
+        this.confirmModalOpen = true;
+        this.hideUserActionsDropdown();
     }
 
     constructor(
@@ -1960,6 +1975,83 @@ export class AdminCargoDetailComponent
                 return 4;
             default:
                 return 0;
+        }
+    }
+
+    get confirmModalTitle(): string {
+        switch (this.confirmModalTarget?.action) {
+            case 'deleteModule': return 'Excluir módulo';
+            case 'deleteModuleFromRole': return 'Remover módulo do curso';
+            case 'deleteLesson': return 'Excluir aula';
+            case 'deleteLessonFromModule': return 'Remover aula do módulo';
+            case 'deleteUser': return 'Excluir usuário';
+            case 'deleteUserFromRole': return 'Remover usuário do curso';
+            case 'deleteTool': return 'Excluir ferramenta';
+            case 'deleteToolFromRole': return 'Remover ferramenta do curso';
+            default: return 'Confirmar';
+        }
+    }
+
+    get confirmModalMessage(): string {
+        const target = this.confirmModalTarget;
+        if (!target) return '';
+        const moduleName = target.module?.name || '';
+        const lessonName = target.lesson?.name || '';
+        const userName = target.user?.name || target.user?.email || '';
+        const toolName = target.tool?.name || '';
+        switch (target.action) {
+            case 'deleteModule':
+                return `Tem certeza que deseja excluir permanentemente o módulo "${moduleName}"? Todas as aulas deste módulo também serão excluídas.`;
+            case 'deleteModuleFromRole':
+                return `Tem certeza que deseja remover o módulo "${moduleName}" deste curso? O módulo continuará disponível em outros cursos.`;
+            case 'deleteLesson':
+                return `Tem certeza que deseja excluir permanentemente a aula "${lessonName}"?`;
+            case 'deleteLessonFromModule':
+                return `Tem certeza que deseja remover a aula "${lessonName}" deste módulo? A aula continuará disponível em outros módulos.`;
+            case 'deleteUser':
+                return `Tem certeza que deseja excluir permanentemente o usuário "${userName}"?`;
+            case 'deleteUserFromRole':
+                return `Tem certeza que deseja remover o usuário "${userName}" deste curso? O usuário continuará disponível em outros cursos.`;
+            case 'deleteTool':
+                return `Tem certeza que deseja excluir permanentemente a ferramenta "${toolName}"?`;
+            case 'deleteToolFromRole':
+                return `Tem certeza que deseja remover a ferramenta "${toolName}" deste curso? A ferramenta continuará disponível em outros cursos.`;
+            default:
+                return 'Tem certeza que deseja realizar esta ação?';
+        }
+    }
+
+    get confirmModalIcon(): 'warning' | 'delete' | 'info' {
+        switch (this.confirmModalTarget?.action) {
+            case 'deleteModule':
+            case 'deleteLesson':
+            case 'deleteUser':
+            case 'deleteTool':
+                return 'delete';
+            case 'deleteModuleFromRole':
+            case 'deleteLessonFromModule':
+            case 'deleteUserFromRole':
+            case 'deleteToolFromRole':
+                return 'warning';
+            default:
+                return 'warning';
+        }
+    }
+
+    get confirmModalConfirmLabel(): string {
+        switch (this.confirmModalTarget?.action) {
+            case 'deleteModule':
+            case 'deleteLesson':
+            case 'deleteUser':
+            case 'deleteTool':
+                return 'Excluir';
+            case 'deleteModuleFromRole':
+            case 'deleteLessonFromModule':
+            case 'deleteUserFromRole':
+            case 'deleteToolFromRole':
+                return 'Remover';
+            default:
+                return 'Confirmar';
         }
     }
 }

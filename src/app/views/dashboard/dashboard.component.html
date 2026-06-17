@@ -197,3 +197,16 @@
 <!-- Add Role Sidebar -->
 <app-add-role *ngIf="showAddRoleSidebarFlag" (close)="hideAddRoleSidebar()" (roleCreated)="onRoleCreated($event)">
 </app-add-role>
+
+<!-- Confirm Delete Modal -->
+<app-confirm-modal *ngIf="confirmModalOpen"
+    title="Excluir curso"
+    [message]="deleteMessage"
+    confirmLabel="Excluir"
+    cancelLabel="Cancelar"
+    icon="delete"
+    confirmClass="danger"
+    [loading]="isDeletingCargo"
+    (confirm)="onConfirmDelete()"
+    (cancel)="onCancelDelete()">
+</app-confirm-modal>

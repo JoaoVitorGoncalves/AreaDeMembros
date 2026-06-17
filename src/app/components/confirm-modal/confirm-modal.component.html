@@ -1,0 +1,40 @@
+<div class="modal-overlay" (click)="onOverlayClick($event)"></div>
+<div class="modal-container">
+    <div class="modal-icon-wrap">
+        <ng-container [ngSwitch]="icon">
+            <svg *ngSwitchCase="'delete'" class="modal-icon modal-icon-danger" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6H21M8 6V4C8 3.73478 8.10536 3.48043 8.29289 3.29289C8.48043 3.10536 8.73478 3 9 3H15C15.2652 3 15.5196 3.10536 15.7071 3.29289C15.8946 3.48043 16 3.73478 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 11V17M14 11V17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg *ngSwitchCase="'info'" class="modal-icon modal-icon-info" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M12 16V12M12 8H12.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg *ngSwitchDefault class="modal-icon modal-icon-warning" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 9V13M12 17H12.01M10.29 3.86L1.82 18C1.64537 18.3024 1.55296 18.6453 1.552 18.9961C1.55105 19.347 1.6416 19.6904 1.8146 19.9938C1.98761 20.2972 2.23707 20.5503 2.53764 20.7277C2.83821 20.905 3.18018 21.0001 3.529 21.0001H20.471C20.8198 21.0001 21.1618 20.905 21.4624 20.7277C21.7629 20.5503 22.0124 20.2972 22.1854 19.9938C22.3584 19.6904 22.449 19.347 22.448 18.9961C22.447 18.6453 22.3546 18.3024 22.18 18L13.71 3.86C13.5317 3.56611 13.2805 3.32312 12.9812 3.15448C12.6819 2.98584 12.3438 2.89725 12 2.89725C11.6562 2.89725 11.3181 2.98584 11.0188 3.15448C10.7195 3.32312 10.4683 3.56611 10.29 3.86Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </ng-container>
+    </div>
+
+    <div class="modal-header">
+        <h2>{{ title }}</h2>
+        <button class="close-btn" (click)="onCancel()" [disabled]="loading">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <div class="modal-body">
+        <p>{{ message }}</p>
+    </div>
+
+    <div class="modal-actions">
+        <button class="cancel-btn" (click)="onCancel()" [disabled]="loading">{{ cancelLabel }}</button>
+        <button class="confirm-btn" [ngClass]="confirmClass === 'danger' ? 'confirm-btn-danger' : 'confirm-btn-primary'" (click)="onConfirm()" [disabled]="loading">
+            <span *ngIf="!loading">{{ confirmLabel }}</span>
+            <span *ngIf="loading" class="btn-spinner"></span>
+        </button>
+    </div>
+</div>

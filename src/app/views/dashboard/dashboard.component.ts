@@ -8,6 +8,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { RolesService, RolesResult } from '../../services/roles.service';
 import { AdminCargoDetailComponent } from '../../components/admin-cargo-detail/admin-cargo-detail.component';
 import { AddRoleComponent } from '../../components/add-role/add-role.component';
+import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal.component';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { LessonService } from '../../services/lesson.service';
@@ -15,7 +16,7 @@ import { LessonService } from '../../services/lesson.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, HeaderComponent, SidebarComponent, AdminCargoDetailComponent, AddRoleComponent],
+  imports: [CommonModule, HeaderComponent, SidebarComponent, AdminCargoDetailComponent, AddRoleComponent, ConfirmModalComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
   changeDetection: ChangeDetectionStrategy.Default
@@ -33,6 +34,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   showAddRoleSidebarFlag: boolean = false;
   lessonsInProgress: { module: Module; lesson: Lesson; progress: number; lastUpdated: string }[] = [];
   dropdownCargoIndex: number | null = null;
+  confirmModalOpen = false;
+  cargoToDelete: any = null;
+  isDeletingCargo = false;
+
+  get deleteMessage(): string {
+    return `Tem certeza que deseja excluir o curso "${this.cargoToDelete?.name || ''}"? Esta ação não pode ser desfeita.`;
+  }
 
   stats = [
     { title: 'Total de Usuários', value: '1.2M', change: '+12%', positive: true },
@@ -409,22 +417,38 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onDeleteCargo(cargo: any): void {
-    this.rolesService.deleteRole(cargo.id).subscribe({
+    this.cargoToDelete = cargo;
+    this.confirmModalOpen = true;
+    this.hideCargoActionsDropdown();
+  }
+
+  onConfirmDelete(): void {
+    if (!this.cargoToDelete) return;
+    this.isDeletingCargo = true;
+    this.rolesService.deleteRole(this.cargoToDelete.id).subscribe({
       next: () => {
-        // Atualizar a lista local removendo o cargo excluído
         const currentRoles = this.rolesSubject.value;
         if (currentRoles) {
-          const updatedRoles = currentRoles.roles.filter(role => role.id !== cargo.id);
+          const updatedRoles = currentRoles.roles.filter(role => role.id !== this.cargoToDelete.id);
           const newRolesResult = { ...currentRoles, roles: updatedRoles };
           this.rolesSubject.next(newRolesResult);
         }
-        this.hideCargoActionsDropdown();
+        this.isDeletingCargo = false;
+        this.confirmModalOpen = false;
+        this.cargoToDelete = null;
       },
       error: (error: any) => {
         console.error('Erro ao excluir cargo:', error);
-        alert('Erro ao excluir o curso. Tente novamente.');
+        this.isDeletingCargo = false;
+        this.confirmModalOpen = false;
+        this.cargoToDelete = null;
       }
     });
+  }
+
+  onCancelDelete(): void {
+    this.confirmModalOpen = false;
+    this.cargoToDelete = null;
   }
 
   openModule(module: Module) {
