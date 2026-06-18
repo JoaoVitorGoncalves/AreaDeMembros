@@ -592,6 +592,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
     });
+    // Deduplicar por lesson.id — mesma aula em módulos diferentes
+    const seen = new Map<number, typeof this.lessonsInProgress[0]>();
+    this.lessonsInProgress.forEach(item => {
+      const existing = seen.get(item.lesson.id);
+      if (!existing || new Date(item.lastUpdated).getTime() > new Date(existing.lastUpdated).getTime()) {
+        seen.set(item.lesson.id, item);
+      }
+    });
+    this.lessonsInProgress = Array.from(seen.values());
     if (!hasAnyProgress && allLessons.length > 0 && shouldFetchBackend) {
       // Buscar progresso do backend se não houver nenhum salvo localmente
       const user = this.lessonService.authService.getUser();
