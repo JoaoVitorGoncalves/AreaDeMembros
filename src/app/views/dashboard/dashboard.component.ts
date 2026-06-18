@@ -31,6 +31,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   roles$: Observable<RolesResult>;
   private rolesSubject = new BehaviorSubject<RolesResult | null>(null);
   selectedCargo: any = null;
+  viewingCourse: any = null;
+  viewCourseModulesList: Module[] = [];
+  viewCourseLoading = false;
   showAddRoleSidebarFlag: boolean = false;
   lessonsInProgress: { module: Module; lesson: Lesson; progress: number; lastUpdated: string }[] = [];
   dropdownCargoIndex: number | null = null;
@@ -227,6 +230,33 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Atualiza o estado salvo no localStorage
     this.saveState();
+  }
+
+  viewCourse(cargo: any): void {
+    this.viewingCourse = cargo;
+    this.viewCourseModulesList = [];
+    this.viewCourseLoading = true;
+    this.moduleService.loadModulesByRole(cargo.name, cargo.id).subscribe({
+      next: (modules) => {
+        this.viewCourseModulesList = modules || [];
+        this.viewCourseLoading = false;
+      },
+      error: () => {
+        this.viewCourseModulesList = [];
+        this.viewCourseLoading = false;
+      },
+    });
+  }
+
+  closeViewCourse(): void {
+    this.viewingCourse = null;
+    this.viewCourseModulesList = [];
+  }
+
+  viewCourseModule(module: Module): void {
+    if (module.lessons && module.lessons.length > 0) {
+      this.router.navigate(['/lesson', module.id, module.lessons[0].id]);
+    }
   }
 
   private scrollToTop(): void {

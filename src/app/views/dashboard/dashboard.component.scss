@@ -48,19 +48,8 @@
     }
 }
 
-/* Modules Section */
-.modules-section {
-    margin-bottom: 25px;
-    padding-bottom: 25px;
-    border-bottom: 1px solid #222222;
-
-    h2 {
-        color: #FAFAFA;
-        font-size: 24px;
-        font-weight: 500;
-        margin-bottom: 24px;
-    }
-
+/* Shared Module Card Styles (user + preview) */
+:is(.modules-section, .view-course-body) {
     .modules-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -133,7 +122,7 @@
                 }
 
                 svg {
-                    margin-left: 2px; // Ajuste para centralizar o ícone de play
+                    margin-left: 2px;
                 }
             }
         }
@@ -146,26 +135,20 @@
             font-weight: 500;
             margin: 0 0 4px;
         }
+    }
+}
 
-        // .status {
-        //     font-size: 14px;
-        //     display: flex;
-        //     align-items: center;
-        //     gap: 6px;
+/* Modules Section (user dashboard specific) */
+.modules-section {
+    margin-bottom: 25px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #222222;
 
-        //     &.completed {
-        //         color: #4ADE80;
-        //     }
-
-        //     &.progress {
-        //         color: #A1A1AA;
-        //     }
-
-        //     .check-icon {
-        //         width: 16px;
-        //         height: 16px;
-        //     }
-        // }
+    h2 {
+        color: #FAFAFA;
+        font-size: 24px;
+        font-weight: 500;
+        margin-bottom: 24px;
     }
 
     .no-modules-message {
@@ -423,6 +406,254 @@
     font-size: 18px;
     display: flex;
     align-items: center;
+}
+
+/* ── Preview Course View ── */
+
+.view-course-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 24px;
+    background: #18181B;
+    border-radius: 12px;
+    margin-bottom: 28px;
+    border: 1px solid #222;
+}
+
+.view-course-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #232325;
+    border: 1px solid #2C2C2E;
+    border-radius: 8px;
+    color: #A1A1AA;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+        color: #FAFAFA;
+        background: #2C2C2E;
+        border-color: #3F3F46;
+    }
+
+    &:active {
+        transform: scale(0.97);
+    }
+
+    svg {
+        transition: transform 0.2s ease;
+    }
+
+    &:hover svg {
+        transform: translateX(-2px);
+    }
+}
+
+.view-course-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.view-course-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #FAFAFA;
+    margin: 0 0 6px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.view-course-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.view-course-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 20px;
+    color: #FBBF24;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.view-course-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #3F3F46;
+    flex-shrink: 0;
+}
+
+.view-course-stat {
+    font-size: 12px;
+    color: #A1A1AA;
+    font-weight: 400;
+
+    &.active {
+        color: #4ADE80;
+    }
+
+    &.inactive {
+        color: #F87171;
+    }
+}
+
+.view-course-body {
+    padding: 0;
+}
+
+.view-course-section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    h3 {
+        color: #FAFAFA;
+        font-size: 16px;
+        font-weight: 500;
+        margin: 0;
+    }
+}
+
+.view-course-section-count {
+    font-size: 12px;
+    color: #52525B;
+    font-weight: 400;
+}
+
+/* Skeleton Loading Grid */
+.preview-loading-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 24px;
+}
+
+.preview-skeleton-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.preview-skeleton-thumb {
+    width: 100%;
+    aspect-ratio: 191 / 301;
+    border-radius: 12px;
+    background: linear-gradient(
+        90deg,
+        #18181B 25%,
+        #232325 50%,
+        #18181B 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.preview-skeleton-line {
+    height: 14px;
+    width: 70%;
+    border-radius: 4px;
+    background: linear-gradient(
+        90deg,
+        #18181B 25%,
+        #232325 50%,
+        #18181B 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    animation-delay: 0.15s;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Lesson badge on module card */
+.module-lesson-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    padding: 3px 8px;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    border-radius: 6px;
+    color: #D4D4D8;
+    font-size: 11px;
+    font-weight: 500;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Enhanced empty state for admin preview */
+.view-course-body .no-modules-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 64px 24px;
+    text-align: center;
+    background: #18181B;
+    border-radius: 12px;
+    border: 1px dashed #27272A;
+
+    svg {
+        color: #3F3F46;
+    }
+
+    p {
+        color: #A1A1AA;
+        font-size: 15px;
+        margin: 0;
+    }
+
+    span {
+        color: #52525B;
+        font-size: 13px;
+    }
+}
+
+/* Entrance animation for modules */
+.view-course-body .modules-grid .module-item {
+    animation: previewFadeUp 0.4s ease-out both;
+}
+
+@for $i from 1 through 20 {
+    .view-course-body .modules-grid .module-item:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.05}s;
+    }
+}
+
+@keyframes previewFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 768px) {

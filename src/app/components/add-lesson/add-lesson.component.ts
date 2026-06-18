@@ -631,12 +631,12 @@ export class AddLessonComponent implements OnDestroy {
 
         const formData = this.lessonForm.value;
 
-        // Prepare payload for lesson creation
+        // Prepare payload for lesson creation – send raw values, backend constructs the full URL
         const payload = {
             name: formData.name,
             description: formData.description || null,
-            thumbnail_url: this.uploadedImageUrl ? `https://assets.userfounded.workers.dev/file/${this.uploadedImageUrl}` : (this.imagePreviewUrl || null),
-            video_url: `https://assets.userfounded.workers.dev${this.uploadedVideoUrl}`,
+            thumbnail_url: this.uploadedImageUrl || this.imagePreviewUrl || null,
+            video_url: this.uploadedVideoUrl || null,
             module_id: this.moduleId || this.lessonForm.get('module_id')?.value
         };
 
