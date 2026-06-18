@@ -193,6 +193,78 @@ export class ModuleService {
         );
     }
 
+    loadModulesForRole(roleName: string): Observable<Module[]> {
+        if (!roleName) {
+            return of([]);
+        }
+
+        const cacheKey = `user_role_${roleName}`;
+        const cachedData = this.modulesCache.get(cacheKey);
+
+        if (cachedData && this.isCacheValid(cachedData.timestamp)) {
+            return of(cachedData.data);
+        }
+
+        const params = new HttpParams().set('role', roleName);
+
+        return this.http.get<ModulesApiResponse>(this.API_URL, { params }).pipe(
+            retryWhen((errors) =>
+                errors.pipe(
+                    delayWhen(() => timer(this.RETRY_DELAY)),
+                    tap((error) =>
+                        console.warn(
+                            `Tentativa de buscar módulos para role "${roleName}" falhou: ${error.message}`,
+                        ),
+                    ),
+                    map((error, index) => {
+                        if (index >= this.MAX_RETRIES - 1) {
+                            throw error;
+                        }
+                        return error;
+                    }),
+                ),
+            ),
+            map((response) => {
+                if (
+                    response &&
+                    response.success &&
+                    Array.isArray(response.data.modules)
+                ) {
+                    return response.data.modules.map(
+                        (apiModule: ApiModule): Module => {
+                            return {
+                                id: apiModule.id,
+                                name: apiModule.name,
+                                thumbnail_url: apiModule.image_path,
+                                lessons:
+                                    apiModule.lessons?.map((lesson) => ({
+                                        id: lesson.id,
+                                        uuid: lesson.uuid,
+                                        name: lesson.name,
+                                        description: lesson.description,
+                                        thumbnail_url: lesson.thumbnail_url,
+                                        video_url: lesson.video_url,
+                                        created_at: lesson.created_at,
+                                        updated_at: lesson.updated_at,
+                                        deleted_at: lesson.deleted_at,
+                                        pivot: lesson.pivot,
+                                    })) || [],
+                            };
+                        },
+                    );
+                }
+                return [];
+            }),
+            tap((modules) => {
+                this.modulesCache.set(cacheKey, {
+                    data: modules,
+                    timestamp: Date.now(),
+                });
+            }),
+            catchError(this.handleError.bind(this)),
+        );
+    }
+
     // Método para carregar módulos por cargo específico (para admin)
     loadModulesByRole(roleName: string, roleId?: number): Observable<Module[]> {
         const token = this.authService.getToken();

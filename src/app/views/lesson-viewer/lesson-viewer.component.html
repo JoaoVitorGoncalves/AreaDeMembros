@@ -1,165 +1,268 @@
 <app-header></app-header>
 
 <div class="lesson-viewer-container">
-    <div class="lesson-viewer-content">
-        <!-- Área principal do vídeo (esquerda) -->
-        <div class="video-section">
-            <!-- Player de vídeo -->
-            <div class="video-player-container">
-                <div class="video-frame">
-                    <!-- Loading state -->
-                    <div *ngIf="isLoading || isProgressLoading || isVideoLoading" class="video-loading">
-                        <div class="loading-spinner"></div>
-                        <p>{{ getLoadingText() }}</p>
-                    </div>
+  <div class="lesson-viewer-content">
+    <!-- Área principal do vídeo (esquerda) -->
+    <div class="video-section">
+      <!-- Player de vídeo -->
+      <div class="video-player-container">
+        <div class="video-frame">
+          <!-- Loading state -->
+          <div
+            *ngIf="isLoading || isProgressLoading || isVideoLoading"
+            class="video-loading"
+          >
+            <div class="loading-spinner"></div>
+            <p>{{ getLoadingText() }}</p>
+          </div>
 
-                    <!-- Player de vídeo real -->
-                    <video #videoPlayer *ngIf="!isLoading && !isProgressLoading && currentLesson?.video_url"
-                        [src]="currentLesson!.video_url" class="video-player" (timeupdate)="onTimeUpdate($event)"
-                        (loadedmetadata)="onLoadedMetadata($event)" (loadstart)="onLoadStart()" (canplay)="onCanPlay()"
-                        (waiting)="onWaiting()" (play)="isPlaying = true" (pause)="isPlaying = false"
-                        (click)="togglePlay()" tabindex="0">
-                        Seu navegador não suporta o elemento de vídeo.
-                    </video>
-                    <!-- Controles customizados -->
-                    <div *ngIf="!isLoading && !isProgressLoading && !isVideoLoading && currentLesson?.video_url"
-                        class="custom-video-controls">
-                        <div class="progress-bar-container" (mousedown)="onProgressBarMouseDown($event)"
-                            (click)="seek($event)">
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" [style.width.%]="getProgressPercentage()"></div>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; width: 100%;">
-                            <button class="play-pause-btn" (click)="togglePlay(); $event.stopPropagation()"
-                                [attr.aria-label]="isPlaying ? 'Pausar' : 'Reproduzir'">
-                                <ng-container *ngIf="!isPlaying">
-                                    <!-- Ícone Play -->
-                                    <svg width="11" height="12" viewBox="0 0 11 12" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M9.80582 7.68601C11.1432 6.9232 11.1532 4.99873 9.82396 4.22196L4.01138 0.825358C2.6821 0.0485872 1.01041 1.0021 1.00235 2.54167L0.9671 9.27382C0.959039 10.8134 2.62064 11.7844 3.95799 11.0216L9.80582 7.68601Z"
-                                            fill="white" />
-                                    </svg>
-                                </ng-container>
-                                <ng-container *ngIf="isPlaying">
-                                    <!-- Ícone Pause -->
-                                    <svg width="24" height="24" viewBox="0 0 24 24">
-                                        <rect x="6" y="4" width="4" height="16" fill="#fff" />
-                                        <rect x="14" y="4" width="4" height="16" fill="#fff" />
-                                    </svg>
-                                </ng-container>
-                            </button>
-                            <span class="video-time">{{ formatTime(currentTime) }} / {{ formatTime(totalTime) }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Placeholder quando não há vídeo -->
-                    <div *ngIf="!isLoading && !currentLesson?.video_url" class="video-placeholder">
-                        <div class="video-content">
-                            <div class="video-text-top">Million</div>
-                            <div class="video-lines">
-                                <div class="video-line"></div>
-                                <div class="video-line"></div>
-                                <div class="video-line"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="lesson-viewer-header">
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <!-- Título da aula -->
-                        <div class="lesson-title">
-                            {{ currentLesson?.name || 'Carregando...' }}
-                        </div>
-
-                        <!-- Breadcrumb -->
-                        <div class="breadcrumb">
-                            <span *ngFor="let item of breadcrumb; let last = last" style="display: flex;">
-                                {{ item }}<span *ngIf="!last" class="breadcrumb-separator"> <svg style="display: flex;"
-                                        width="16" height="16" viewBox="0 0 16 16" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M6 12L10 8L6 4" stroke="#EFEFEF" stroke-opacity="0.53"
-                                            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </span>
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Botão de concluir -->
-                    <div class="complete-button-container">
-                        <button class="complete-button" (click)="completeLesson()">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M13 4L6 11L3 8" stroke="#fff" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                            Concluir e avançar
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Seção de descrição -->
-                <div class="description-section">
-                    <h3 class="description-title">Descrição</h3>
-                    <div class="description-content">
-                        <div [innerHTML]="lessonDescription" class="description-html"></div>
-                    </div>
-                </div>
+          <!-- Player de vídeo real -->
+          <video
+            #videoPlayer
+            *ngIf="!isLoading && !isProgressLoading && currentLesson?.video_url"
+            [src]="currentLesson!.video_url"
+            class="video-player"
+            (timeupdate)="onTimeUpdate($event)"
+            (loadedmetadata)="onLoadedMetadata($event)"
+            (loadstart)="onLoadStart()"
+            (canplay)="onCanPlay()"
+            (waiting)="onWaiting()"
+            (play)="isPlaying = true"
+            (pause)="isPlaying = false"
+            (click)="togglePlay()"
+            tabindex="0"
+          >
+            Seu navegador não suporta o elemento de vídeo.
+          </video>
+          <!-- Controles customizados -->
+          <div
+            *ngIf="
+              !isLoading &&
+              !isProgressLoading &&
+              !isVideoLoading &&
+              currentLesson?.video_url
+            "
+            class="custom-video-controls"
+          >
+            <div
+              class="progress-bar-container"
+              (mousedown)="onProgressBarMouseDown($event)"
+              (click)="seek($event)"
+            >
+              <div class="progress-bar-bg">
+                <div
+                  class="progress-bar-fill"
+                  [style.width.%]="getProgressPercentage()"
+                ></div>
+              </div>
             </div>
+            <div style="display: flex; align-items: center; width: 100%">
+              <button
+                class="play-pause-btn"
+                (click)="togglePlay(); $event.stopPropagation()"
+                [attr.aria-label]="isPlaying ? 'Pausar' : 'Reproduzir'"
+              >
+                <ng-container *ngIf="!isPlaying">
+                  <!-- Ícone Play -->
+                  <svg
+                    width="11"
+                    height="12"
+                    viewBox="0 0 11 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9.80582 7.68601C11.1432 6.9232 11.1532 4.99873 9.82396 4.22196L4.01138 0.825358C2.6821 0.0485872 1.01041 1.0021 1.00235 2.54167L0.9671 9.27382C0.959039 10.8134 2.62064 11.7844 3.95799 11.0216L9.80582 7.68601Z"
+                      fill="white"
+                    />
+                  </svg>
+                </ng-container>
+                <ng-container *ngIf="isPlaying">
+                  <!-- Ícone Pause -->
+                  <svg width="24" height="24" viewBox="0 0 24 24">
+                    <rect x="6" y="4" width="4" height="16" fill="#fff" />
+                    <rect x="14" y="4" width="4" height="16" fill="#fff" />
+                  </svg>
+                </ng-container>
+              </button>
+              <span class="video-time"
+                >{{ formatTime(currentTime) }} /
+                {{ formatTime(totalTime) }}</span
+              >
+            </div>
+          </div>
+
+          <!-- Placeholder quando não há vídeo -->
+          <div
+            *ngIf="!isLoading && !currentLesson?.video_url"
+            class="video-placeholder"
+          >
+            <div class="video-content">
+              <div class="video-text-top">Million</div>
+              <div class="video-lines">
+                <div class="video-line"></div>
+                <div class="video-line"></div>
+                <div class="video-line"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Sidebar com progresso e lista de aulas (direita) -->
-        <div class="sidebar-section">
-            <!-- Progresso do curso -->
-            <div class="course-progress">
-                <h3 class="course-title">{{ courseName }}</h3>
-                <div class="progress-info">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                        <span class="progress-label">Progresso total</span>
-                        <span class="progress-percentage">{{ totalProgress }}%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" [style.width.%]="totalProgress"></div>
-                    </div>
-                </div>
+        <div class="lesson-viewer-header">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <!-- Título da aula -->
+            <div class="lesson-title">
+              {{ currentLesson?.name || "Carregando..." }}
             </div>
 
-            <!-- Lista de aulas -->
-            <div class="lessons-list">
-                <div class="lesson-item" *ngFor="let lesson of moduleLessons" [class.active]="isCurrentLesson(lesson)"
-                    (click)="selectLesson(lesson)">
-                    <div class="lesson-thumbnail">
-                        <img *ngIf="lesson.thumbnail_url" [src]="lesson.thumbnail_url" [alt]="lesson.name"
-                            class="lesson-thumb">
-                        <div *ngIf="!lesson.thumbnail_url" class="lesson-thumb-placeholder"
-                            [style.background]="getThumbnailColor(lesson.id)">
-                            <span class="lesson-thumb-text">{{ lesson.id }}</span>
-                        </div>
-                        <div class="lesson-overlay" *ngIf="getLessonProgress(lesson.id) > 0">
-                            <div class="lesson-progress-circle"
-                                [style.background]="getLessonProgress(lesson.id) === 100 ? '#28A745' : '#5E74FF'">
-                                <svg *ngIf="getLessonProgress(lesson.id) === 100" width="12" height="12"
-                                    viewBox="0 0 16 16" fill="none">
-                                    <path d="M13 4L6 11L3 8" stroke="#fff" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                                <span *ngIf="getLessonProgress(lesson.id) < 100">{{ getLessonProgress(lesson.id)
-                                    }}%</span>
-                            </div>
-                        </div>
-                        <!-- Barra de progresso linear -->
-                        <div class="lesson-progress-bar" *ngIf="getLessonProgress(lesson.id) > 0">
-                            <div class="lesson-progress-fill" [style.width.%]="getLessonProgress(lesson.id)"></div>
-                        </div>
-                    </div>
-                    <div class="lesson-info">
-                        <div class="lesson-name">{{ lesson.name }}</div>
-                    </div>
-                </div>
+            <!-- Breadcrumb -->
+            <div class="breadcrumb">
+              <span
+                *ngFor="let item of breadcrumb; let last = last"
+                style="display: flex"
+              >
+                {{ item
+                }}<span *ngIf="!last" class="breadcrumb-separator">
+                  <svg
+                    style="display: flex"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M6 12L10 8L6 4"
+                      stroke="#EFEFEF"
+                      stroke-opacity="0.53"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </span>
             </div>
+          </div>
+
+          <!-- Botão de concluir -->
+          <div class="complete-button-container">
+            <button class="complete-button" (click)="completeLesson()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M13 4L6 11L3 8"
+                  stroke="#fff"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              Concluir e avançar
+            </button>
+          </div>
         </div>
+
+        <!-- Seção de descrição -->
+        <div class="description-section">
+          <h3 class="description-title">Descrição</h3>
+          <div class="description-content">
+            <div [innerHTML]="lessonDescription" class="description-html"></div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Sidebar com progresso e lista de aulas (direita) -->
+    <div class="sidebar-section">
+      <!-- Progresso do curso -->
+      <div class="course-progress">
+        <h3 class="course-title">{{ courseName }}</h3>
+        <div class="progress-info">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 5px;
+            "
+          >
+            <span class="progress-label">Progresso total</span>
+            <span class="progress-percentage">{{ totalProgress }}%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="totalProgress"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de aulas -->
+      <div class="lessons-list">
+        <div
+          class="lesson-item"
+          *ngFor="let lesson of moduleLessons"
+          [class.active]="isCurrentLesson(lesson)"
+          (click)="selectLesson(lesson)"
+        >
+          <div class="lesson-thumbnail">
+            <img
+              *ngIf="lesson.thumbnail_url"
+              [src]="lesson.thumbnail_url"
+              [alt]="lesson.name"
+              class="lesson-thumb"
+            />
+            <div
+              *ngIf="!lesson.thumbnail_url"
+              class="lesson-thumb-placeholder"
+              [style.background]="getThumbnailColor(lesson.id)"
+            >
+              <span class="lesson-thumb-text">{{ lesson.id }}</span>
+            </div>
+            <div
+              class="lesson-overlay"
+              *ngIf="getLessonProgress(lesson.id) > 0"
+            >
+              <div
+                class="lesson-progress-circle"
+                [style.background]="
+                  getLessonProgress(lesson.id) === 100 ? '#28A745' : '#5E74FF'
+                "
+              >
+                <svg
+                  *ngIf="getLessonProgress(lesson.id) === 100"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                >
+                  <path
+                    d="M13 4L6 11L3 8"
+                    stroke="#fff"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span *ngIf="getLessonProgress(lesson.id) < 100"
+                  >{{ getLessonProgress(lesson.id) }}%</span
+                >
+              </div>
+            </div>
+            <!-- Barra de progresso linear -->
+            <div
+              class="lesson-progress-bar"
+              *ngIf="getLessonProgress(lesson.id) > 0"
+            >
+              <div
+                class="lesson-progress-fill"
+                [style.width.%]="getLessonProgress(lesson.id)"
+              ></div>
+            </div>
+          </div>
+          <div class="lesson-info">
+            <div class="lesson-name">{{ lesson.name }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

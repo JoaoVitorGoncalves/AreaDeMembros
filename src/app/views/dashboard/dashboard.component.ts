@@ -4,7 +4,7 @@ import { AuthService, User } from '../../services/auth.service';
 import { HeaderComponent } from '../../layouts/header/header.component';
 import { SidebarComponent } from '../../layouts/sidebar/sidebar.component';
 import { Module, ModuleService, Lesson } from '../../services/module.service';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, forkJoin } from 'rxjs';
 import { RolesService, RolesResult } from '../../services/roles.service';
 import { AdminCargoDetailComponent } from '../../components/admin-cargo-detail/admin-cargo-detail.component';
 import { AddRoleComponent } from '../../components/add-role/add-role.component';
@@ -12,6 +12,12 @@ import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-mo
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { LessonService } from '../../services/lesson.service';
+
+interface CourseModules {
+  roleName: string;
+  modules: Module[];
+  loading: boolean;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -36,6 +42,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   viewCourseLoading = false;
   showAddRoleSidebarFlag: boolean = false;
   lessonsInProgress: { module: Module; lesson: Lesson; progress: number; lastUpdated: string }[] = [];
+  coursesWithModules: CourseModules[] = [];
   dropdownCargoIndex: number | null = null;
   confirmModalOpen = false;
   cargoToDelete: any = null;
@@ -93,18 +100,43 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.detectChanges();
       });
     } else {
-      // Carregar módulos e sincronizar com LessonService
-      this.moduleService.loadModules().subscribe(modules => {
-        modules.forEach(module => {
-          if (!module.lessons || module.lessons.length === 0) {
-            console.warn(`⚠️ Módulo ${module.name} (ID: ${module.id}) não possui aulas`);
-          }
+      const userRoles = (this.currentUser?.roles || []).filter(r => r.toLowerCase() !== 'admin');
+
+      if (userRoles.length === 0) {
+        return;
+      }
+
+      this.coursesWithModules = userRoles.map(roleName => ({
+        roleName,
+        modules: [],
+        loading: true,
+      }));
+
+      const requests = userRoles.map(roleName =>
+        this.moduleService.loadModulesForRole(roleName)
+      );
+
+      forkJoin(requests).subscribe(results => {
+        const allModules: Module[] = [];
+
+        results.forEach((modules, index) => {
+          this.coursesWithModules[index].modules = modules;
+          this.coursesWithModules[index].loading = false;
+          allModules.push(...modules);
+
+          modules.forEach(module => {
+            if (!module.lessons || module.lessons.length === 0) {
+              console.warn(`⚠️ Módulo ${module.name} (ID: ${module.id}) não possui aulas`);
+            }
+          });
         });
-        this.lessonService.setModules(modules);
-        // Após carregar módulos, buscar progresso do backend se necessário
+
+        this.moduleService.modulesSubject.next(allModules);
+        this.lessonService.setModules(allModules);
         this.updateLessonsInProgress(true);
+        this.cdr.detectChanges();
       });
-      // Atualizar lista de aulas em andamento após qualquer mudança nos módulos
+
       this.modules$.subscribe(() => this.updateLessonsInProgress(false));
     }
 

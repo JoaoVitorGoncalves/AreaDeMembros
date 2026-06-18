@@ -198,52 +198,35 @@
                     </div>
                 </div>
 
-                <!-- Main Modules Section -->
-                <div class="modules-section">
-                    <h2>Módulos</h2>
-                    <div *ngIf="loading$ | async; else modulesContent" class="loading-spinner">
-                        <!-- You can replace this with a more sophisticated spinner component -->
-                        <p style="color: #fff;">Carregando módulos...</p>
-                    </div>
-
-                    <ng-template #modulesContent>
-                        <div *ngIf="(modules$ | async) as modules">
-                            <div *ngIf="modules.length > 0; else noModules" class="modules-grid">
-                                <div class="module-item" *ngFor="let module of modules" (click)="openModule(module)">
-                                    <div class="module-card">
-                                        <img [src]="module.thumbnail_url" [alt]="module.name">
-                                        <div class="module-overlay">
-                                            <div class="play-icon">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                                    <path d="M8 5V19L19 12L8 5Z" fill="#fff" />
-                                                </svg>
-                                            </div>
+                <!-- Course Modules Sections -->
+                <ng-container *ngFor="let course of coursesWithModules">
+                    <div class="modules-section">
+                        <h2>{{ course.roleName }}</h2>
+                        <div *ngIf="course.loading" class="loading-spinner">
+                            <p style="color: #fff;">Carregando módulos...</p>
+                        </div>
+                        <div *ngIf="!course.loading && course.modules.length === 0" class="no-modules-message">
+                            <p>Nenhum módulo disponível para este curso no momento.</p>
+                        </div>
+                        <div *ngIf="!course.loading && course.modules.length > 0" class="modules-grid">
+                            <div class="module-item" *ngFor="let module of course.modules" (click)="openModule(module)">
+                                <div class="module-card">
+                                    <img [src]="module.thumbnail_url" [alt]="module.name">
+                                    <div class="module-overlay">
+                                        <div class="play-icon">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                                <path d="M8 5V19L19 12L8 5Z" fill="#fff" />
+                                            </svg>
                                         </div>
                                     </div>
-                                    <div class="module-info">
-                                        <h3>{{ module.name }}</h3>
-                                        <!-- <p class="status" [ngClass]="module.status">
-                                            <svg *ngIf="module.status === 'completed'"
-                                                xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" class="check-icon">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                            <span *ngIf="module.status === 'completed'">Concluído</span>
-                                            <span *ngIf="module.status === 'progress'">Progresso {{ module.progress
-                                                }}%</span>
-                                        </p> -->
-                                    </div>
+                                </div>
+                                <div class="module-info">
+                                    <h3>{{ module.name }}</h3>
                                 </div>
                             </div>
-                            <ng-template #noModules>
-                                <div class="no-modules-message">
-                                    <p>Nenhum módulo disponível para o seu curso no momento.</p>
-                                </div>
-                            </ng-template>
                         </div>
-                    </ng-template>
-                </div>
+                    </div>
+                </ng-container>
 
                 <!-- Continue Progress Section -->
                 <div class="progress-section" *ngIf="lessonsInProgress.length > 0">

@@ -9,6 +9,7 @@
     padding: 30px;
     display: flex;
     justify-content: center;
+    flex-direction: column;
 }
 
 /* Welcome Section */
@@ -555,12 +556,10 @@
     width: 100%;
     aspect-ratio: 191 / 301;
     border-radius: 12px;
-    background: linear-gradient(
-        90deg,
-        #18181B 25%,
-        #232325 50%,
-        #18181B 75%
-    );
+    background: linear-gradient(90deg,
+            #18181B 25%,
+            #232325 50%,
+            #18181B 75%);
     background-size: 200% 100%;
     animation: shimmer 1.8s ease-in-out infinite;
 }
@@ -569,12 +568,10 @@
     height: 14px;
     width: 70%;
     border-radius: 4px;
-    background: linear-gradient(
-        90deg,
-        #18181B 25%,
-        #232325 50%,
-        #18181B 75%
-    );
+    background: linear-gradient(90deg,
+            #18181B 25%,
+            #232325 50%,
+            #18181B 75%);
     background-size: 200% 100%;
     animation: shimmer 1.8s ease-in-out infinite;
     animation-delay: 0.15s;
@@ -584,6 +581,7 @@
     0% {
         background-position: 200% 0;
     }
+
     100% {
         background-position: -200% 0;
     }
@@ -650,6 +648,7 @@
         opacity: 0;
         transform: translateY(12px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
