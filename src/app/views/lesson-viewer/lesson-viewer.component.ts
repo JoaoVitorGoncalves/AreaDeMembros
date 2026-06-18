@@ -34,6 +34,16 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
     totalTime: number = 0;
     isPlaying: boolean = false;
 
+    isFullscreen: boolean = false;
+    volume: number = 1;
+    previousVolume: number = 1;
+    isMuted: boolean = false;
+
+    // Controle de visibilidade dos controles
+    controlsVisible: boolean = true;
+    private hideControlsTimer: any = null;
+    mouseInsideVideo: boolean = false;
+
     // Dados da aula atual
     currentLesson: Lesson | null = null;
 
@@ -223,6 +233,56 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
         this.progressRestored = true;
     }
 
+    @HostListener('document:fullscreenchange')
+    @HostListener('document:webkitfullscreenchange')
+    @HostListener('document:mozfullscreenchange')
+    @HostListener('document:MSFullscreenChange')
+    onFullscreenChange(): void {
+        this.isFullscreen = !!document.fullscreenElement;
+    }
+
+    @HostListener('document:keydown', ['$event'])
+    handleKeyboardEvent(event: KeyboardEvent): void {
+        const video = this.videoPlayer?.nativeElement;
+        if (!video || this.isLoading || this.isProgressLoading) return;
+
+        const target = event.target as HTMLElement;
+        const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+        if (isInput) return;
+
+        switch (event.code) {
+            case 'Space':
+                event.preventDefault();
+                this.togglePlay();
+                break;
+
+            case 'ArrowLeft':
+                event.preventDefault();
+                this.seekBy(-5);
+                break;
+
+            case 'ArrowRight':
+                event.preventDefault();
+                this.seekBy(5);
+                break;
+
+            case 'ArrowUp':
+                event.preventDefault();
+                this.adjustVolume(0.1);
+                break;
+
+            case 'ArrowDown':
+                event.preventDefault();
+                this.adjustVolume(-0.1);
+                break;
+
+            case 'KeyF':
+                event.preventDefault();
+                this.toggleFullscreen();
+                break;
+        }
+    }
+
     // Controles do vídeo
     togglePlay(): void {
         if (this.videoPlayer?.nativeElement) {
@@ -231,8 +291,108 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
             } else {
                 this.videoPlayer.nativeElement.play();
             }
-            // isPlaying será atualizado pelos eventos (play/pause)
         }
+    }
+
+    // ── Auto-hide controls ──
+
+    startControlsTimer(): void {
+        this.clearControlsTimer();
+        this.controlsVisible = true;
+        if (this.isPlaying) {
+            this.hideControlsTimer = setTimeout(() => {
+                this.controlsVisible = false;
+            }, 5000);
+        }
+    }
+
+    clearControlsTimer(): void {
+        if (this.hideControlsTimer) {
+            clearTimeout(this.hideControlsTimer);
+            this.hideControlsTimer = null;
+        }
+    }
+
+    toggleFullscreen(): void {
+        const videoFrame = this.videoPlayer?.nativeElement?.parentElement;
+
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => { });
+        } else if (videoFrame) {
+            videoFrame.requestFullscreen().catch(() => { });
+        }
+    }
+
+    seekBy(seconds: number): void {
+        const video = this.videoPlayer?.nativeElement;
+        if (!video) return;
+        video.currentTime = Math.max(0, Math.min(video.currentTime + seconds, video.duration || 0));
+    }
+
+    toggleMute(): void {
+        const video = this.videoPlayer?.nativeElement;
+        if (!video) return;
+
+        if (this.isMuted) {
+            video.muted = false;
+            this.isMuted = false;
+            this.volume = this.previousVolume || 1;
+            video.volume = this.volume;
+        } else {
+            this.previousVolume = this.volume;
+            video.muted = true;
+            this.isMuted = true;
+            this.volume = 0;
+        }
+    }
+
+    onVolumeSliderChange(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const value = parseFloat(input.value);
+        this.volume = value;
+        const video = this.videoPlayer?.nativeElement;
+        if (video) {
+            video.volume = value;
+            if (value === 0) {
+                video.muted = true;
+                this.isMuted = true;
+            } else {
+                video.muted = false;
+                this.isMuted = false;
+                this.previousVolume = value;
+            }
+        }
+    }
+
+    adjustVolume(delta: number): void {
+        const video = this.videoPlayer?.nativeElement;
+        if (!video) return;
+        this.volume = Math.max(0, Math.min(1, Math.round((this.volume + delta) * 10) / 10));
+        video.volume = this.volume;
+        if (this.volume > 0) {
+            video.muted = false;
+            this.isMuted = false;
+        } else {
+            video.muted = true;
+            this.isMuted = true;
+        }
+    }
+
+    onVideoMouseEnter(): void {
+        this.mouseInsideVideo = true;
+        this.startControlsTimer();
+    }
+
+    onVideoMouseMove(): void {
+        if (this.mouseInsideVideo) {
+            this.startControlsTimer();
+        }
+    }
+
+    onVideoMouseLeave(): void {
+        this.mouseInsideVideo = false;
+        this.clearControlsTimer();
+        this.controlsVisible = false;
     }
 
     // Pausar vídeo
@@ -285,7 +445,16 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isVideoLoading = true;
     }
 
-    // Método para detectar quando o vídeo termina de carregar
+    onPlay(): void {
+        this.isPlaying = true;
+        this.startControlsTimer();
+    }
+
+    onPause(): void {
+        this.isPlaying = false;
+        this.clearControlsTimer();
+        this.controlsVisible = true;
+    }
     onCanPlay(): void {
         this.isVideoLoading = false;
     }
