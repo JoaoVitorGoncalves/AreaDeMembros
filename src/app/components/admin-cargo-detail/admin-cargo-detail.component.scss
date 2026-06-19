@@ -488,9 +488,9 @@ input:checked+.slider:before {
 
 // === USUÁRIOS TAB ===
 .cargo-users-section {
-    margin-top: 24px;
     color: #fff;
     font-family: 'Inter', sans-serif;
+    height: 100%;
 }
 
 .cargo-users-header-row {
@@ -645,7 +645,7 @@ input:checked+.slider:before {
 
 .cargo-users-table {
     margin-top: 18px;
-    // border-radius: 10px;
+    height: 100%;
     overflow: hidden;
     background: none;
 }
@@ -786,7 +786,7 @@ input:checked+.slider:before {
 
 // === FERRAMENTAS TAB ===
 .cargo-tools-section {
-    margin-top: 24px;
+    height: 100%;
     color: #fff;
     font-family: 'Inter', sans-serif;
 }
@@ -890,6 +890,7 @@ input:checked+.slider:before {
     margin-top: 18px;
     overflow: hidden;
     background: none;
+    height: 100%;
 }
 
 .cargo-tools-table-header {
