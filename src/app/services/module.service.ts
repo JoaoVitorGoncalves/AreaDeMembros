@@ -588,6 +588,21 @@ export class ModuleService {
         localStorage.setItem('persisted_modules', JSON.stringify(updatedCurrent));
     }
 
+    private removeModuleFromAllCaches(moduleId: number): void {
+        this.modulesCache.forEach((cacheEntry, cacheKey) => {
+            const filtered = cacheEntry.data.filter(m => m.id !== moduleId);
+            this.modulesCache.set(cacheKey, {
+                data: filtered,
+                timestamp: cacheEntry.timestamp,
+            });
+        });
+
+        const currentModules = this.modulesSubject.value;
+        const filtered = currentModules.filter(m => m.id !== moduleId);
+        this.modulesSubject.next(filtered);
+        localStorage.setItem('persisted_modules', JSON.stringify(filtered));
+    }
+
     /**
      * Busca todos os módulos para admin, filtrando por role_id
      */
@@ -691,8 +706,7 @@ export class ModuleService {
 
         return this.http.delete<any>(url, { headers }).pipe(
             tap(() => {
-                // Limpar cache para forçar recarregamento
-                this.clearCache();
+                this.removeModuleFromAllCaches(moduleId);
             }),
             catchError((error) => {
                 console.error('Erro ao remover módulo do cargo:', error);
