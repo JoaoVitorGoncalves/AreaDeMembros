@@ -194,16 +194,17 @@
       </div>
 
       <!-- Module Cards -->
+      <div cdkDropList (cdkDropListDropped)="onModuleDrop($event)" class="cargo-modules-droplist">
       <div
         *ngFor="let module of modules$ | async; let i = index"
-        class="cargo-module-container"
+        class="cargo-module-container" cdkDrag
       >
         <div
           class="cargo-module-card"
           [class.expanded]="isModuleExpanded(module.id)"
         >
           <div class="cargo-module-left">
-            <span class="cargo-module-drag">&#8942;&#8942;</span>
+            <span class="cargo-module-drag" cdkDragHandle>&#8942;&#8942;</span>
             <!-- <input type="checkbox" class="cargo-module-checkbox" disabled> -->
             <div class="cargo-module-info">
               <span class="cargo-module-title">{{ module.name }}</span>
@@ -335,12 +336,14 @@
             >
               <p>Ainda não há aulas para esse módulo.</p>
             </div>
+            <div cdkDropList (cdkDropListDropped)="onLessonDrop($event, module.id)" class="cargo-lessons-droplist">
             <div
               class="cargo-module-lesson-card"
               *ngFor="let lesson of module.lessons; let i = index"
+              cdkDrag
             >
               <div class="cargo-module-lesson-left">
-                <span class="cargo-module-drag">&#8942;&#8942;</span>
+                <span class="cargo-module-drag" cdkDragHandle>&#8942;&#8942;</span>
                 <!-- <input type="checkbox" class="cargo-module-checkbox" disabled> -->
                 <button
                   class="cargo-module-play-btn"
@@ -440,9 +443,11 @@
                 </div>
               </div>
             </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 

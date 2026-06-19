@@ -535,6 +535,59 @@ export class ModuleService {
         }
     }
 
+    syncCacheWithCurrentOrder(roleName: string, roleId: number, modules: Module[]): void {
+        if (!roleName) return;
+
+        const cacheKey = `role_${roleName}_${roleId || 'no_id'}`;
+        const cachedEntry = this.modulesCache.get(cacheKey);
+        if (cachedEntry) {
+            this.modulesCache.set(cacheKey, {
+                data: [...modules],
+                timestamp: cachedEntry.timestamp,
+            });
+        }
+
+        const userCacheKey = `user_role_${roleName}`;
+        const userEntry = this.modulesCache.get(userCacheKey);
+        if (userEntry) {
+            this.modulesCache.set(userCacheKey, {
+                data: [...modules],
+                timestamp: userEntry.timestamp,
+            });
+        }
+
+        this.modulesSubject.next([...modules]);
+        localStorage.setItem('persisted_modules', JSON.stringify(modules));
+    }
+
+    syncLessonOrderAcrossAllCaches(moduleId: number, modules: Module[]): void {
+        const sourceModule = modules.find(m => m.id === moduleId);
+        if (!sourceModule || !sourceModule.lessons) return;
+
+        this.modulesCache.forEach((cacheEntry, cacheKey) => {
+            const updatedModules = cacheEntry.data.map(m => {
+                if (m.id === moduleId) {
+                    return { ...m, lessons: [...(sourceModule.lessons || [])] };
+                }
+                return m;
+            });
+            this.modulesCache.set(cacheKey, {
+                data: updatedModules,
+                timestamp: cacheEntry.timestamp,
+            });
+        });
+
+        const currentModules = this.modulesSubject.value;
+        const updatedCurrent = currentModules.map(m => {
+            if (m.id === moduleId) {
+                return { ...m, lessons: [...(sourceModule.lessons || [])] };
+            }
+            return m;
+        });
+        this.modulesSubject.next(updatedCurrent);
+        localStorage.setItem('persisted_modules', JSON.stringify(updatedCurrent));
+    }
+
     /**
      * Busca todos os módulos para admin, filtrando por role_id
      */
@@ -643,6 +696,30 @@ export class ModuleService {
             }),
             catchError((error) => {
                 console.error('Erro ao remover módulo do cargo:', error);
+                return throwError(() => error);
+            }),
+        );
+    }
+
+    reorderModules(moduleIds: number[], roleId: number, token: string): Observable<any> {
+        const url = `${environment.apiUrl}/api/v1/modules/reorder`;
+        const headers = { Authorization: `Bearer ${token}` };
+
+        return this.http.post<any>(url, { module_ids: moduleIds, role_id: roleId }, { headers }).pipe(
+            catchError((error) => {
+                console.error('Erro ao reordenar módulos:', error);
+                return throwError(() => error);
+            }),
+        );
+    }
+
+    reorderLessons(moduleId: number, lessonIds: number[], token: string): Observable<any> {
+        const url = `${environment.apiUrl}/api/v1/modules/${moduleId}/lessons/reorder`;
+        const headers = { Authorization: `Bearer ${token}` };
+
+        return this.http.post<any>(url, { lesson_ids: lessonIds }, { headers }).pipe(
+            catchError((error) => {
+                console.error('Erro ao reordenar aulas:', error);
                 return throwError(() => error);
             }),
         );

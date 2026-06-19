@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Router } from '@angular/router';
 import { Role } from '../../models/role.model';
 import { UsersService, User } from '../../services/users.service';
@@ -42,6 +43,7 @@ import { AuthService } from '../../services/auth.service';
     imports: [
         CommonModule,
         FormsModule,
+        DragDropModule,
         AddUserComponent,
         AddToolComponent,
         AddModuleComponent,
@@ -1553,6 +1555,38 @@ export class AdminCargoDetailComponent
 
     isModuleExpanded(moduleId: number): boolean {
         return this.expandedModules.has(moduleId);
+    }
+
+    onModuleDrop(event: CdkDragDrop<Module[]>): void {
+        moveItemInArray(this.modules, event.previousIndex, event.currentIndex);
+        this.modulesSubject.next(this.modules);
+        this.moduleService.modulesSubject.next(this.modules);
+
+        const token = this.authService.getToken() || '';
+        const moduleIds = this.modules.map(m => m.id);
+        const roleId = this.cargo?.id;
+        const roleName = this.cargo?.name;
+        if (roleId && roleName) {
+            this.moduleService.reorderModules(moduleIds, roleId, token).subscribe({
+                next: () => this.moduleService.syncCacheWithCurrentOrder(roleName, roleId, this.modules),
+                error: (err) => console.error('Erro ao salvar ordem dos módulos', err),
+            });
+        }
+    }
+
+    onLessonDrop(event: CdkDragDrop<Lesson[]>, moduleId: number): void {
+        const target = this.modules.find(m => m.id === moduleId);
+        if (!target || !target.lessons) return;
+        moveItemInArray(target.lessons, event.previousIndex, event.currentIndex);
+        this.modulesSubject.next(this.modules);
+        this.moduleService.modulesSubject.next(this.modules);
+
+        const token = this.authService.getToken() || '';
+        const lessonIds = target.lessons.map(l => l.id);
+        this.moduleService.reorderLessons(moduleId, lessonIds, token).subscribe({
+            next: () => this.moduleService.syncLessonOrderAcrossAllCaches(moduleId, this.modules),
+            error: (err) => console.error('Erro ao salvar ordem das aulas', err),
+        });
     }
 
     showUserDropdownMenu(event: MouseEvent): void {
