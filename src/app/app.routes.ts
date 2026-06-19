@@ -8,6 +8,10 @@ export const routes: Routes = [
         loadComponent: () => import('./views/login/login.component').then(c => c.LoginComponent)
     },
     {
+        path: 'invite/:token',
+        loadComponent: () => import('./views/invite/invite.component').then(c => c.InviteComponent)
+    },
+    {
         path: 'dashboard',
         loadComponent: () => import('./views/dashboard/dashboard.component').then(c => c.DashboardComponent),
         canActivate: [AuthGuard],

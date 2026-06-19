@@ -631,17 +631,23 @@
                 </div>
 
                 <div class="config-field-group">
-                    <label class="config-label">URL personalizada</label>
+                    <label class="config-label">Link de convite</label>
                     <div class="config-url-row">
-                        <div class="config-url-prefix">https://grupomillion.com/club/</div>
-                        <input type="text" class="config-url-input" [(ngModel)]="customUrl" name="customUrl"
-                            [disabled]="!isEditingCustomUrl" [value]="cargo?.custom_url || ''">
-                        <button type="button" class="config-edit-btn" *ngIf="!isEditingCustomUrl"
-                            (click)="isEditingCustomUrl = true">Editar</button>
+                        <div class="config-url-prefix">https://grupomillion.com/invite/</div>
+                        <input type="text" class="config-url-input config-url-input-readonly"
+                            [value]="cargo?.invite_token || ''" readonly>
+                        <button type="button" class="config-copy-btn" (click)="copyInviteLink()"
+                            title="Copiar link de convite">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
-                <div class="config-actions" *ngIf="isEditingCourseName || isEditingCustomUrl">
+                <div class="config-actions" *ngIf="isEditingCourseName">
                     <button type="button" class="config-cancel-btn" (click)="onConfigCancel()">Cancelar</button>
                     <button type="button" class="config-save-btn" (click)="onConfigSave()"
                         [disabled]="!hasConfigChanges()">Salvar</button>

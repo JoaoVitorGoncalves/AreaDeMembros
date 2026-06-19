@@ -68,7 +68,7 @@ export class SidebarComponent implements OnInit {
   }
 
   get rolesCountExcluindoAdmin(): number {
-    return this.roles.filter(r => r.custom_url !== 'admin' && (r.name || '').toLowerCase() !== 'admin').length;
+    return this.roles.filter(r => (r.name || '').toLowerCase() !== 'admin').length;
   }
 
   get rolesProgressPercent(): number {

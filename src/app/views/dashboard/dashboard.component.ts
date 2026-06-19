@@ -67,7 +67,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   get rolesCountExcluindoAdmin(): number {
     const current = this.rolesSubject.value;
     if (!current) return 0;
-    return current.roles.filter(r => r.custom_url !== 'admin' && (r.name || '').toLowerCase() !== 'admin').length;
+    return current.roles.filter(r => (r.name || '').toLowerCase() !== 'admin').length;
   }
 
   constructor(
@@ -449,7 +449,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   // Método auxiliar para verificar se dados locais são mais recentes
   private isLocalDataMoreRecent(localRole: any, serviceRole: any): boolean {
     // Implementação simples: se o cargo local tem dados diferentes, considerar mais recente
-    return localRole.name !== serviceRole.name || localRole.custom_url !== serviceRole.custom_url;
+    return localRole.name !== serviceRole.name;
   }
 
   // Métodos para controlar o sidebar de adicionar cargo

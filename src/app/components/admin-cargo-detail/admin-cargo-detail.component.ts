@@ -87,7 +87,6 @@ export class AdminCargoDetailComponent
 
     // Controle de edição dos campos de configuração
     isEditingCourseName: boolean = false;
-    isEditingCustomUrl: boolean = false;
 
     // Observables do serviço de usuários
     users$: Observable<User[]>;
@@ -205,7 +204,6 @@ export class AdminCargoDetailComponent
 
     // Configurações
     courseName: string = 'Gestão de Tráfego';
-    customUrl: string = 'gestao-de-trafego';
 
     private destroy$ = new Subject<void>();
     private supportSavingSubject = new BehaviorSubject<boolean>(false);
@@ -603,7 +601,6 @@ export class AdminCargoDetailComponent
         // Sincronizar campos de configuração com o cargo selecionado
         if (this.cargo) {
             this.courseName = this.cargo.name || '';
-            this.customUrl = this.cargo.custom_url || '';
         }
 
         // Restaurar tab ativa do localStorage se existir
@@ -672,7 +669,6 @@ export class AdminCargoDetailComponent
 
                 // Sincronizar campos de configuração com o novo cargo
                 this.courseName = currentCargo?.name || '';
-                this.customUrl = currentCargo?.custom_url || '';
 
                 // Carregar módulos do servidor para o novo cargo
                 this.loadModulesIfNeeded();
@@ -1425,24 +1421,30 @@ export class AdminCargoDetailComponent
     }
 
     // Métodos para controlar a edição de configurações
+    copyInviteLink(): void {
+        const url = `https://grupomillion.com/invite/${this.cargo?.invite_token || ''}`;
+        navigator.clipboard.writeText(url).catch(() => {
+            const input = document.createElement('input');
+            input.value = url;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+        });
+    }
+
     onConfigCancel(): void {
         this.isEditingCourseName = false;
-        this.isEditingCustomUrl = false;
     }
 
     onConfigSave(): void {
-        // Verifica se há cargo selecionado e se algum campo foi editado
         if (!this.cargo) return;
         const updates: any = {};
         if (this.isEditingCourseName && this.courseName !== this.cargo.name) {
             updates.name = this.courseName;
         }
-        if (this.isEditingCustomUrl && this.customUrl !== this.cargo.custom_url) {
-            updates.custom_url = this.customUrl;
-        }
         if (Object.keys(updates).length === 0) {
             this.isEditingCourseName = false;
-            this.isEditingCustomUrl = false;
             return;
         }
 
@@ -1451,29 +1453,17 @@ export class AdminCargoDetailComponent
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next: (updatedRole) => {
-                    // Cria o cargo atualizado usando os valores locais (mais confiável)
                     const updatedCargo = {
                         ...this.cargo!,
                         name: this.isEditingCourseName ? this.courseName : this.cargo!.name,
-                        custom_url: this.isEditingCustomUrl
-                            ? this.customUrl
-                            : this.cargo!.custom_url,
                     };
 
-                    // Atualiza o cargo local do componente
                     this.cargo = updatedCargo;
-
-                    // CRÍTICO: Força a limpeza do cache do serviço para garantir sincronização
                     this.rolesService.clearCache();
-
-                    // Atualiza o localStorage do dashboardState
                     this.updateDashboardState(updatedCargo);
-
-                    // Emite evento para o componente pai (atualização local)
                     this.cargoUpdated.emit(updatedCargo);
 
                     this.isEditingCourseName = false;
-                    this.isEditingCustomUrl = false;
                 },
                 error: (error) => {
                     console.error('❌ Erro ao atualizar cargo:', error);
@@ -1517,7 +1507,7 @@ export class AdminCargoDetailComponent
 
     // Otimização: Método para validar se os dados foram alterados
     hasConfigChanges(): boolean {
-        return this.isEditingCourseName || this.isEditingCustomUrl;
+        return this.isEditingCourseName;
     }
 
     // Método para alterar o status ativo/inativo do cargo

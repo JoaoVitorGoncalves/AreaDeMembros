@@ -124,7 +124,7 @@ export class RolesService {
         return this.getRoles();
     }
 
-    createRole(data: { name: string; custom_url: string; active?: boolean; support_email?: string; support_phone?: string }): Observable<Role> {
+    createRole(data: { name: string; active?: boolean; support_email?: string; support_phone?: string }): Observable<Role> {
         console.log(data);
         if (!this.authService.isAdmin()) {
             return throwError(() => new Error('Acesso negado: apenas administradores podem criar cargos.'));
@@ -159,7 +159,7 @@ export class RolesService {
         );
     }
 
-    updateRole(id: number, data: Partial<Pick<Role, 'name' | 'custom_url' | 'active'>>): Observable<Role> {
+    updateRole(id: number, data: Partial<Pick<Role, 'name' | 'active'>>): Observable<Role> {
         if (!this.authService.isAdmin()) {
             return throwError(() => new Error('Acesso negado: apenas administradores podem editar cargos.'));
         }

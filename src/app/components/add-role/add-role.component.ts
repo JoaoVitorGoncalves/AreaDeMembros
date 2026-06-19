@@ -32,28 +32,13 @@ export class AddRoleComponent {
     ) {
         this.roleForm = this.fb.group({
             name: ['', [Validators.required, Validators.maxLength(100)]],
-            custom_url: [''],
             active: [true],
             email: ['', [Validators.email]],
-            phone: ['', [Validators.pattern(/^\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/)]] // Aceita formatos como (99) 99999-9999
+            phone: ['', [Validators.pattern(/^\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/)]]
         });
-        // Removido o valueChanges
     }
 
     onSubmit() {
-        // Gera o slug do custom_url a partir do name antes de validar/enviar
-        const name = this.roleForm.get('name')?.value || '';
-        let slug = '';
-        if (typeof name === 'string' && name.trim().length > 0) {
-            slug = name
-                .toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
-                .replace(/[^a-z0-9]+/g, '-') // troca por hífen
-                .replace(/^-+|-+$/g, '') // remove hífens do início/fim
-                .replace(/--+/g, '-'); // evita múltiplos hífens
-        }
-        this.roleForm.get('custom_url')?.setValue(slug, { emitEvent: false });
-
         if (this.roleForm.invalid) {
             this.roleForm.markAllAsTouched();
             return;
@@ -64,10 +49,8 @@ export class AddRoleComponent {
         this.successMessage = null;
         this.cdr.markForCheck();
 
-        // Monta o payload para a API, mapeando os campos corretamente
         const payload = {
             name: this.roleForm.get('name')?.value,
-            custom_url: this.roleForm.get('custom_url')?.value,
             active: this.roleForm.get('active')?.value,
             email: this.roleForm.get('email')?.value,
             phone: this.roleForm.get('phone')?.value

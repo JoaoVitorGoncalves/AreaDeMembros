@@ -11,6 +11,15 @@ interface LoginRequest {
     password: string;
 }
 
+interface RegisterRequest {
+    name: string;
+    email: string;
+    phone: string;
+    document: string;
+    password: string;
+    invite_token: string;
+}
+
 export interface User {
     id: number;
     uuid: string;
@@ -19,6 +28,7 @@ export interface User {
     document: string;
     phone: string;
     roles: string[];
+    is_admin?: boolean;
     created_at: string;
 }
 
@@ -69,7 +79,6 @@ export class AuthService {
             .pipe(
                 tap((response: LoginResponse) => {
                     if (response.success && response.data?.token) {
-                        // Salvar token e dados do usuário
                         localStorage.setItem('access_token', response.data.token);
                         localStorage.setItem('token_type', response.data.token_type);
                         localStorage.setItem('expires_in', response.data.expires_in.toString());
@@ -84,6 +93,23 @@ export class AuthService {
             );
     }
 
+    register(data: RegisterRequest): Observable<LoginResponse> {
+        return this.http.post<LoginResponse>(`${this.API_URL}/register`, data).pipe(
+            tap((response: LoginResponse) => {
+                if (response.success && response.data?.token) {
+                    localStorage.setItem('access_token', response.data.token);
+                    localStorage.setItem('token_type', response.data.token_type);
+                    localStorage.setItem('expires_in', response.data.expires_in.toString());
+                    localStorage.setItem('userEmail', data.email);
+                    localStorage.setItem('user', JSON.stringify(response.data.user));
+
+                    this.isLoggedInSubject.next(true);
+                }
+            }),
+            catchError((error: HttpErrorResponse) => this.handleLoginError(error))
+        );
+    }
+
     private handleLoginError(error: HttpErrorResponse): Observable<never> {
         this.loadingSubject.next(false);
 
@@ -91,32 +117,43 @@ export class AuthService {
 
         if (error.status === 401) {
             errorMessage = 'Email ou senha incorretos';
+        } else if (error.status === 403) {
+            errorMessage = error.error?.message || 'Acesso não autorizado';
+        } else if (error.status === 404) {
+            errorMessage = error.error?.message || 'Link de convite inválido';
+        } else if (error.status === 409) {
+            errorMessage = error.error?.message || 'Usuário já existe com este email ou documento';
         } else if (error.status === 422) {
-            errorMessage = 'Dados inválidos';
-        } else if (error.status === 500) {
-            if (error.error?.message?.includes('Rate limiter')) {
-                errorMessage = 'Servidor temporariamente indisponível. Tente novamente em alguns minutos.';
+            const errors = error.error?.errors;
+            if (errors) {
+                const allMessages: string[] = [];
+                for (const field in errors) {
+                    if (Array.isArray(errors[field])) {
+                        allMessages.push(...errors[field]);
+                    }
+                }
+                errorMessage = allMessages.length > 0 ? allMessages.join('. ') : 'Dados inválidos';
             } else {
-                errorMessage = 'Erro interno do servidor. Contate o suporte.';
+                errorMessage = 'Dados inválidos';
             }
+        } else if (error.status === 500) {
+            if (error.error?.message?.includes('Rate limiter'))
+                errorMessage = 'Servidor temporariamente indisponível. Tente novamente em alguns minutos.';
+            else
+                errorMessage = 'Erro interno do servidor. Contate o suporte.';
         } else if (error.status === 0) {
             errorMessage = 'Erro de conexão. Verifique sua internet';
         } else if (error.error?.message) {
             errorMessage = error.error.message;
         }
 
-        // Log detalhado para debug (remover em produção)
-        console.error('Erro de login detalhado:', {
+        console.error('Erro de autenticação detalhado:', {
             status: error.status,
             message: error.error?.message || error.message,
             error: error.error
         });
 
-        const authError: AuthError = {
-            message: errorMessage,
-            status: error.status
-        };
-
+        const authError: AuthError = { message: errorMessage, status: error.status };
         return throwError(() => authError);
     }
 
@@ -155,9 +192,8 @@ export class AuthService {
 
     isAdmin(): boolean {
         const user = this.getUser();
-        if (!user || !user.roles) {
-            return false;
-        }
+        if (!user || !user.roles) return false;
+        if (user.is_admin !== undefined) return user.is_admin;
         return user.roles.some(role =>
             ['admin', 'administrator', 'adm', 'Adm'].includes(role.toLowerCase())
         );

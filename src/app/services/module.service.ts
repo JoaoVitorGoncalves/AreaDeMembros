@@ -25,7 +25,7 @@ export interface Module {
     contentCount?: number;
     created_at?: string | null;
     updated_at?: string | null;
-    lessons?: Lesson[]; // Lista de aulas do módulo
+    lessons?: Lesson[];
 }
 
 export interface Lesson {
@@ -56,7 +56,7 @@ interface ApiModule {
     created_at: string | null;
     updated_at: string | null;
     roles: any[];
-    lessons?: ApiLesson[]; // Lista de aulas do módulo
+    lessons?: ApiLesson[];
 }
 
 interface ApiLesson {
@@ -251,11 +251,11 @@ export class ModuleService {
                                         deleted_at: lesson.deleted_at,
                                         pivot: lesson.pivot,
                                     })) || [],
-                            };
-                        },
-                    );
-                }
-                return [];
+                                };
+                            },
+                        );
+                    }
+                    return [];
             }),
             tap((modules) => {
                 this.modulesCache.set(cacheKey, {
@@ -345,8 +345,8 @@ export class ModuleService {
                                         deleted_at: lesson.deleted_at,
                                         pivot: lesson.pivot,
                                     })) || [],
-                            }),
-                        );
+                                }),
+                            );
                     }
                     return [];
                 }),
@@ -581,8 +581,8 @@ export class ModuleService {
                                 deleted_at: lesson.deleted_at,
                                 pivot: lesson.pivot,
                             })) || [],
-                    }),
-                );
+                        }),
+                    );
 
                 return {
                     modules,

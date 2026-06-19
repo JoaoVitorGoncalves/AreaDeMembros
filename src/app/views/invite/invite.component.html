@@ -1,0 +1,51 @@
+<div class="invite-container">
+    <div class="logo">
+        <div class="logo-wrapper">
+            <img src="/images/logo.png" alt="Million" class="logo-image">
+        </div>
+    </div>
+    <div class="invite-card">
+        <form (ngSubmit)="onSubmit()" #inviteForm="ngForm">
+            <div class="form-header">
+                <h2>Crie sua conta de membro</h2>
+            </div>
+            <div class="error-message" *ngIf="errorMessage" role="alert">
+                <span class="error-icon">⚠️</span>
+                {{ errorMessage }}
+            </div>
+            <div class="form-group">
+                <input type="text" id="name" name="name" [(ngModel)]="registerData.name"
+                    placeholder="Nome completo" required class="form-input" [disabled]="isLoading"
+                    (input)="clearError()" autocomplete="name">
+            </div>
+            <div class="form-group">
+                <input type="email" id="email" name="email" [(ngModel)]="registerData.email"
+                    placeholder="Email" required email class="form-input" [disabled]="isLoading"
+                    (input)="clearError()" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <input type="tel" id="phone" name="phone" [(ngModel)]="registerData.phone"
+                    placeholder="Telefone" required class="form-input" [disabled]="isLoading"
+                    (input)="onPhoneInput($event); clearError()" autocomplete="tel">
+            </div>
+            <div class="form-group">
+                <input type="text" id="document" name="document" [(ngModel)]="registerData.document"
+                    placeholder="CPF" required class="form-input" [disabled]="isLoading"
+                    (input)="onDocumentInput($event); clearError()" autocomplete="off" maxlength="14">
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" name="password" [(ngModel)]="registerData.password"
+                    placeholder="Senha (mínimo 8 caracteres)" required minlength="8" class="form-input"
+                    [disabled]="isLoading" (input)="clearError()" autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn-register" [disabled]="!inviteForm.form.valid || isLoading"
+                [class.loading]="isLoading">
+                <span *ngIf="!isLoading">Criar conta</span>
+                <span *ngIf="isLoading" class="loading-content">
+                    <span class="spinner"></span>
+                    Criando...
+                </span>
+            </button>
+        </form>
+    </div>
+</div>

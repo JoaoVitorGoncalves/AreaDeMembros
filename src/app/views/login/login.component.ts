@@ -46,18 +46,20 @@ export class LoginComponent implements OnDestroy {
             return;
         }
 
-        // Limpar mensagem de erro anterior
+        if (this.loginData.password.length < 8) {
+            this.errorMessage = 'A senha deve ter no mínimo 8 caracteres';
+            return;
+        }
+
         this.errorMessage = '';
 
         this.authService.login(this.loginData.email, this.loginData.password)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next: (response) => {
-                    // Login bem-sucedido - redirecionar para dashboard
                     this.router.navigate(['/dashboard']);
                 },
                 error: (error: any) => {
-                    // Exibir mensagem de erro
                     this.errorMessage = error.message || 'Erro ao fazer login';
                 }
             });

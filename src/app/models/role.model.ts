@@ -2,13 +2,13 @@ export interface Role {
     id: number;
     uuid: string;
     name: string;
-    custom_url: string;
+    invite_token?: string;
     description?: string;
     active?: boolean;
     created_at?: string;
     updated_at?: string;
     deleted_at?: string | null;
-    users_count?: number; // Novo campo para contagem de usuários
+    users_count?: number;
 }
 
 export interface RolesResponse {
