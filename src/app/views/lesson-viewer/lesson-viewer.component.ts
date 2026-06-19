@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LessonService } from '../../services/lesson.service';
 import { Module, Lesson } from '../../services/module.service';
 import { HeaderComponent } from '../../layouts/header/header.component';
+import Hls from 'hls.js';
 
 @Component({
     selector: 'app-lesson-viewer',
@@ -20,6 +21,8 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
     @Output() lessonCompleted = new EventEmitter<any>();
 
     @ViewChild('videoPlayer', { static: false }) videoPlayer!: ElementRef<HTMLVideoElement>;
+
+    private hls: Hls | null = null;
 
     // Parâmetros da rota
     moduleId: string | null = null;
@@ -62,7 +65,6 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
     // Estado de loading do vídeo
     isVideoLoading: boolean = false;
 
-    // Flag para controlar se o progresso já foi restaurado
     private progressRestored: boolean = false;
 
     // Controle de salvamento do progresso
@@ -102,15 +104,7 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     ngAfterViewInit(): void {
-        // Restaurar progresso do vídeo após o vídeo estar carregado
-        if (this.videoPlayer?.nativeElement) {
-            this.videoPlayer.nativeElement.addEventListener('loadedmetadata', () => {
-                // Só restaurar progresso se não estiver carregando progresso do backend
-                if (!this.isProgressLoading) {
-                    this.restoreVideoProgress();
-                }
-            });
-        }
+        // initPlayer será chamado após carregar os dados (em loadLessonData / selectLesson)
     }
 
     private loadLessonData(): void {
@@ -176,6 +170,7 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
                         console.error('❌ Aula não encontrada no módulo');
                     }
                     this.isLoading = false;
+                    setTimeout(() => this.refreshAndInitPlayer(), 100);
                 } else {
                     // Tentar restaurar do localStorage e tentar novamente
                     this.lessonService.restoreModulesFromLocalStorage();
@@ -200,6 +195,7 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
                             console.error('❌ Módulo não encontrado (mesmo após restaurar do localStorage)');
                         }
                         this.isLoading = false;
+                        setTimeout(() => this.refreshAndInitPlayer(), 100);
                     });
                 }
             });
@@ -215,19 +211,17 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
             return;
         }
 
-        const moduleIdNum = parseInt(this.moduleId);
-        const lessonIdNum = parseInt(this.lessonId);
-        const savedProgress = this.lessonService.getVideoProgress(moduleIdNum, lessonIdNum);
+        const video = this.videoPlayer.nativeElement;
+        const savedProgress = this.lessonService.getVideoProgress(parseInt(this.moduleId), parseInt(this.lessonId));
 
-        if (savedProgress && savedProgress.currentTime > 0) {
-            // Definir o tempo do vídeo para onde parou
-            this.videoPlayer.nativeElement.currentTime = savedProgress.currentTime;
+        if (!savedProgress || savedProgress.currentTime <= 0) {
+            this.progressRestored = true;
+            return;
+        }
+
+        if (savedProgress.currentTime > 0) {
+            video.currentTime = savedProgress.currentTime;
             this.currentTime = savedProgress.currentTime;
-
-            // Se o progresso for maior que 90%, considerar como concluída
-            if (savedProgress.progress >= 90) {
-                this.lessonService.completeLesson(moduleIdNum, lessonIdNum);
-            }
         }
 
         this.progressRestored = true;
@@ -395,6 +389,71 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
         this.controlsVisible = false;
     }
 
+    // ── HLS Player ──
+
+    private initPlayer(): void {
+        this.destroyHls();
+
+        const video = this.videoPlayer?.nativeElement;
+        if (!video || !this.currentLesson) return;
+
+        const hlsUrl = this.currentLesson.hls_url;
+        const mp4Url = this.currentLesson.video_url;
+        const savedProgress = this.savedVideoProgress;
+
+        if (hlsUrl && Hls.isSupported()) {
+            this.hls = new Hls({
+                enableWorker: true,
+                lowLatencyMode: true,
+                backBufferLength: 30,
+                maxBufferLength: 60,
+            });
+            this.hls.loadSource(hlsUrl);
+            this.hls.attachMedia(video);
+
+            this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                this.isVideoLoading = false;
+            });
+        } else if (mp4Url) {
+            video.src = mp4Url;
+        }
+    }
+
+    private refreshAndInitPlayer(): void {
+        if (!this.currentLesson || !this.moduleId) {
+            this.initPlayer();
+            return;
+        }
+
+        if (this.currentLesson.hls_url) {
+            this.initPlayer();
+            return;
+        }
+
+        this.lessonService.fetchFreshModuleFromApi(parseInt(this.moduleId))
+            .subscribe(freshModule => {
+                if (freshModule) {
+                    const freshLesson = freshModule.lessons?.find(l => l.id === this.currentLesson!.id);
+                    if (freshLesson?.hls_url) {
+                        this.currentLesson = freshLesson;
+                    }
+                }
+                this.initPlayer();
+            });
+    }
+
+    private destroyHls(): void {
+        if (this.hls) {
+            this.hls.destroy();
+            this.hls = null;
+        }
+    }
+
+    private get savedVideoProgress(): { currentTime: number; totalTime: number; progress: number; lastUpdated: string } | null {
+        if (!this.moduleId || !this.lessonId) return null;
+        return this.lessonService.getVideoProgress(parseInt(this.moduleId), parseInt(this.lessonId));
+    }
+
     // Pausar vídeo
     pauseVideo(): void {
         this.isPlaying = false;
@@ -548,8 +607,9 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Navegação entre aulas
     selectLesson(lesson: Lesson): void {
-        // Pausar vídeo atual se estiver tocando
+        // Pausar e destruir player atual
         this.pauseVideo();
+        this.destroyHls();
 
         this.currentLesson = lesson;
         this.lessonId = lesson.id.toString();
@@ -568,6 +628,7 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.moduleId) {
             this.router.navigate(['/lesson', this.moduleId, lesson.id]);
         }
+        setTimeout(() => this.refreshAndInitPlayer(), 100);
         setTimeout(() => this.updateTotalProgress(), 100);
     }
 
@@ -646,6 +707,7 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.saveCurrentProgress();
+        this.destroyHls();
     }
 
     private saveCurrentProgress(): void {

@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { Module, Lesson, ModuleService } from './module.service';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 
 // Interface para o payload do progresso
 interface ProgressPayload {
@@ -65,6 +65,29 @@ export class LessonService {
             observer.next(module);
             observer.complete();
         });
+    }
+
+    fetchFreshModuleFromApi(moduleId: number): Observable<Module | null> {
+        return this.http.get<{ success: boolean; data: { module: Module } }>(
+            `${this.API_URL}/modules/${moduleId}`
+        ).pipe(
+            tap(response => {
+                if (response.success && response.data?.module) {
+                    const freshModule = response.data.module;
+                    const modules = this.modulesSubject.value;
+                    const index = modules.findIndex(m => m.id === moduleId);
+                    if (index >= 0) {
+                        modules[index] = freshModule;
+                        this.modulesSubject.next([...modules]);
+                    }
+                }
+            }),
+            map(response => response.success ? response.data.module : null),
+            catchError(() => {
+                const modules = this.modulesSubject.value;
+                return of(modules.find(m => m.id === moduleId) || null);
+            })
+        );
     }
 
     getLessonById(moduleId: number, lessonId: number): Observable<Lesson | undefined> {

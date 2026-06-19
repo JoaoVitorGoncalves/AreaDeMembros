@@ -35,6 +35,8 @@ export interface Lesson {
     description: string;
     thumbnail_url: string;
     video_url: string;
+    hls_url?: string;
+    conversion_status?: 'pending' | 'processing' | 'completed' | 'failed';
     created_at: string;
     updated_at: string;
     deleted_at: string | null;

@@ -23,8 +23,7 @@
           <!-- Player de vídeo real -->
           <video
             #videoPlayer
-            *ngIf="!isLoading && !isProgressLoading && currentLesson?.video_url"
-            [src]="currentLesson!.video_url"
+            *ngIf="!isLoading && !isProgressLoading && (currentLesson?.video_url || currentLesson?.hls_url)"
             class="video-player"
             (timeupdate)="onTimeUpdate($event)"
             (loadedmetadata)="onLoadedMetadata($event)"
@@ -44,7 +43,7 @@
               !isLoading &&
               !isProgressLoading &&
               !isVideoLoading &&
-              currentLesson?.video_url &&
+              (currentLesson?.video_url || currentLesson?.hls_url) &&
               controlsVisible
             "
             class="custom-video-controls"
@@ -162,7 +161,7 @@
 
           <!-- Placeholder quando não há vídeo -->
           <div
-            *ngIf="!isLoading && !currentLesson?.video_url"
+            *ngIf="!isLoading && !currentLesson?.video_url && !currentLesson?.hls_url"
             class="video-placeholder"
           >
             <div class="video-content">
