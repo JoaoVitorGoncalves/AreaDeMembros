@@ -402,7 +402,6 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
 
         const hlsUrl = this.currentLesson.hls_url;
         const mp4Url = this.currentLesson.video_url;
-        const savedProgress = this.savedVideoProgress;
 
         if (hlsUrl && Hls.isSupported()) {
             this.hls = new Hls({
@@ -416,9 +415,15 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
 
             this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 this.isVideoLoading = false;
+                video.play().catch(() => {
+                    // Navegador bloqueou autoplay — fica pausado, sem mutar
+                });
             });
         } else if (mp4Url) {
             video.src = mp4Url;
+            video.play().catch(() => {
+                // Navegador bloqueou autoplay — fica pausado, sem mutar
+            });
         }
     }
 
