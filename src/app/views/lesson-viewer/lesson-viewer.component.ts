@@ -154,48 +154,17 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
                         }
                     }
 
-                    // Encontrar a aula atual dentro do módulo carregado
-                    const currentLesson = module.lessons?.find(l => l.id === lessonIdNum);
-
-                    if (currentLesson) {
-                        this.currentLesson = currentLesson;
-                        this.lessonDescription = currentLesson.description;
-                        this.isVideoLoading = true; // Ativar loading para nova aula
-
-                        // Usar duração estimada do serviço
-                        const estimatedDuration = this.lessonService.getEstimatedDuration(currentLesson);
-                        const durationParts = estimatedDuration.split(':');
-                        this.totalTime = parseInt(durationParts[0]) * 60 + parseInt(durationParts[1]);
-                    } else {
-                        console.error('❌ Aula não encontrada no módulo');
-                    }
-                    this.isLoading = false;
-                    setTimeout(() => this.refreshAndInitPlayer(), 100);
+                    this.applyModule(module, moduleIdNum, lessonIdNum);
                 } else {
-                    // Tentar restaurar do localStorage e tentar novamente
+                    // Fallback 1: restaurar do localStorage
                     this.lessonService.restoreModulesFromLocalStorage();
                     this.lessonService.getModuleById(moduleIdNum).subscribe(module2 => {
                         if (module2) {
-                            this.courseName = module2.name;
-                            this.totalProgress = 0;
-                            this.moduleLessons = module2.lessons || [];
-                            this.breadcrumb = ['Início', module2.name, 'Aula - ' + lessonIdNum];
-                            const currentLesson = module2.lessons?.find(l => l.id === lessonIdNum);
-                            if (currentLesson) {
-                                this.currentLesson = currentLesson;
-                                this.lessonDescription = currentLesson.description;
-                                this.isVideoLoading = true; // Ativar loading para nova aula
-                                const estimatedDuration = this.lessonService.getEstimatedDuration(currentLesson);
-                                const durationParts = estimatedDuration.split(':');
-                                this.totalTime = parseInt(durationParts[0]) * 60 + parseInt(durationParts[1]);
-                            } else {
-                                console.error('❌ Aula não encontrada no módulo (mesmo após restaurar do localStorage)');
-                            }
+                            this.applyModule(module2, moduleIdNum, lessonIdNum);
                         } else {
-                            console.error('❌ Módulo não encontrado (mesmo após restaurar do localStorage)');
+                            // Fallback 2: buscar do backend diretamente
+                            this.fetchModuleFromApi(moduleIdNum, lessonIdNum);
                         }
-                        this.isLoading = false;
-                        setTimeout(() => this.refreshAndInitPlayer(), 100);
                     });
                 }
             });
@@ -203,6 +172,40 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
             console.error('❌ ModuleId ou LessonId não fornecidos');
             this.isLoading = false;
         }
+    }
+
+    private applyModule(module: Module, moduleIdNum: number, lessonIdNum: number): void {
+        this.courseName = module.name;
+        this.totalProgress = 0;
+        this.moduleLessons = module.lessons || [];
+        this.breadcrumb = ['Início', module.name, 'Aula - ' + lessonIdNum];
+
+        const currentLesson = module.lessons?.find(l => l.id === lessonIdNum);
+
+        if (currentLesson) {
+            this.currentLesson = currentLesson;
+            this.lessonDescription = currentLesson.description;
+            this.isVideoLoading = true;
+
+            const estimatedDuration = this.lessonService.getEstimatedDuration(currentLesson);
+            const durationParts = estimatedDuration.split(':');
+            this.totalTime = parseInt(durationParts[0]) * 60 + parseInt(durationParts[1]);
+        } else {
+            console.error('❌ Aula não encontrada no módulo');
+        }
+        this.isLoading = false;
+        setTimeout(() => this.refreshAndInitPlayer(), 100);
+    }
+
+    private fetchModuleFromApi(moduleIdNum: number, lessonIdNum: number): void {
+        this.lessonService.fetchFreshModuleFromApi(moduleIdNum).subscribe(freshModule => {
+            if (freshModule) {
+                this.applyModule(freshModule, moduleIdNum, lessonIdNum);
+            } else {
+                console.error('❌ Módulo não encontrado (cache, localStorage e API falharam)');
+                this.isLoading = false;
+            }
+        });
     }
 
     // Restaurar progresso do vídeo

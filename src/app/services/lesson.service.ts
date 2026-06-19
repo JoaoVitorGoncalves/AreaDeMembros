@@ -76,10 +76,15 @@ export class LessonService {
                     const freshModule = response.data.module;
                     const modules = this.modulesSubject.value;
                     const index = modules.findIndex(m => m.id === moduleId);
+                    let updatedModules: Module[];
                     if (index >= 0) {
-                        modules[index] = freshModule;
-                        this.modulesSubject.next([...modules]);
+                        updatedModules = [...modules];
+                        updatedModules[index] = freshModule;
+                    } else {
+                        updatedModules = [...modules, freshModule];
                     }
+                    this.modulesSubject.next(updatedModules);
+                    localStorage.setItem('persisted_modules', JSON.stringify(updatedModules));
                 }
             }),
             map(response => response.success ? response.data.module : null),
