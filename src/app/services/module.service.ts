@@ -603,6 +603,72 @@ export class ModuleService {
         localStorage.setItem('persisted_modules', JSON.stringify(filtered));
     }
 
+    updateModuleInAllCaches(moduleId: number, updatedFields: Partial<Module>): void {
+        this.modulesCache.forEach((cacheEntry, cacheKey) => {
+            const updatedData = cacheEntry.data.map(m => {
+                if (m.id === moduleId) {
+                    return { ...m, ...updatedFields };
+                }
+                return m;
+            });
+            this.modulesCache.set(cacheKey, {
+                data: updatedData,
+                timestamp: cacheEntry.timestamp,
+            });
+        });
+
+        const currentModules = this.modulesSubject.value;
+        const updatedCurrent = currentModules.map(m => {
+            if (m.id === moduleId) {
+                return { ...m, ...updatedFields };
+            }
+            return m;
+        });
+        this.modulesSubject.next(updatedCurrent);
+        localStorage.setItem('persisted_modules', JSON.stringify(updatedCurrent));
+    }
+
+    updateLessonInAllCaches(moduleId: number, lessonId: number, updatedFields: Partial<Lesson>): void {
+        this.modulesCache.forEach((cacheEntry, cacheKey) => {
+            const updatedData = cacheEntry.data.map(m => {
+                if (m.id === moduleId && m.lessons) {
+                    return {
+                        ...m,
+                        lessons: m.lessons.map(l => {
+                            if (l.id === lessonId) {
+                                return { ...l, ...updatedFields };
+                            }
+                            return l;
+                        }),
+                    };
+                }
+                return m;
+            });
+            this.modulesCache.set(cacheKey, {
+                data: updatedData,
+                timestamp: cacheEntry.timestamp,
+            });
+        });
+
+        const currentModules = this.modulesSubject.value;
+        const updatedCurrent = currentModules.map(m => {
+            if (m.id === moduleId && m.lessons) {
+                return {
+                    ...m,
+                    lessons: m.lessons.map(l => {
+                        if (l.id === lessonId) {
+                            return { ...l, ...updatedFields };
+                        }
+                        return l;
+                    }),
+                };
+            }
+            return m;
+        });
+        this.modulesSubject.next(updatedCurrent);
+        localStorage.setItem('persisted_modules', JSON.stringify(updatedCurrent));
+    }
+
     /**
      * Busca todos os módulos para admin, filtrando por role_id
      */
@@ -734,6 +800,30 @@ export class ModuleService {
         return this.http.post<any>(url, { lesson_ids: lessonIds }, { headers }).pipe(
             catchError((error) => {
                 console.error('Erro ao reordenar aulas:', error);
+                return throwError(() => error);
+            }),
+        );
+    }
+
+    updateModule(moduleId: number, moduleData: any, token: string): Observable<any> {
+        const url = `${environment.apiUrl}/api/v1/modules/${moduleId}`;
+        const headers = { Authorization: `Bearer ${token}` };
+
+        return this.http.put<any>(url, moduleData, { headers }).pipe(
+            catchError((error) => {
+                console.error('Erro ao atualizar módulo:', error);
+                return throwError(() => error);
+            }),
+        );
+    }
+
+    updateLesson(lessonId: number, lessonData: any, token: string): Observable<any> {
+        const url = `${environment.apiUrl}/api/v1/lessons/${lessonId}`;
+        const headers = { Authorization: `Bearer ${token}` };
+
+        return this.http.put<any>(url, lessonData, { headers }).pipe(
+            catchError((error) => {
+                console.error('Erro ao atualizar aula:', error);
                 return throwError(() => error);
             }),
         );

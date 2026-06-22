@@ -19,8 +19,14 @@ import { environment } from '../../../environments/environment';
 })
 export class AddModuleComponent {
     @Input() cargo: Role | null = null;
+    @Input() module: any | null = null;
     @Output() close = new EventEmitter<void>();
     @Output() moduleCreated = new EventEmitter<any>();
+    @Output() moduleUpdated = new EventEmitter<any>();
+
+    get isEditing(): boolean {
+        return this.module !== null;
+    }
 
     moduleForm: FormGroup;
     isLoading = false;
@@ -48,12 +54,28 @@ export class AddModuleComponent {
         });
     }
 
+    ngOnInit(): void {
+        if (this.isEditing && this.module) {
+            this.loadModuleData(this.module);
+        }
+    }
+
+    private loadModuleData(moduleData: any): void {
+        const imageUrl = moduleData.thumbnail_url || moduleData.image_path || '';
+        this.moduleForm.patchValue({ name: moduleData.name });
+        if (imageUrl) {
+            this.uploadedImageUrl = imageUrl;
+            this.imagePreviewUrl = imageUrl;
+        }
+    }
+
     // Getter para verificar se o botão deve estar habilitado
     get isFormValid(): boolean {
         const nameValid = this.moduleForm.get('name')?.valid &&
             this.moduleForm.get('name')?.value?.trim()?.length > 0;
 
-        const imageValid = !!(this.uploadedImageUrl &&
+        const imageValid = this.isEditing || !!(
+            this.uploadedImageUrl &&
             !this.isUploadingImage &&
             !this.imageUploadError);
 
@@ -63,13 +85,14 @@ export class AddModuleComponent {
     // Método para gerar tooltip do botão
     getButtonTooltip(): string {
         if (this.isLoading) {
-            return 'Criando módulo...';
+            return this.isEditing ? 'Salvando...' : 'Criando módulo...';
         }
 
         const nameValid = this.moduleForm.get('name')?.valid &&
             this.moduleForm.get('name')?.value?.trim()?.length > 0;
 
-        const imageValid = !!(this.uploadedImageUrl &&
+        const imageValid = this.isEditing || !!(
+            this.uploadedImageUrl &&
             !this.isUploadingImage &&
             !this.imageUploadError);
 
@@ -86,7 +109,7 @@ export class AddModuleComponent {
             return 'Adicione uma imagem';
         }
 
-        return 'Criar módulo';
+        return this.isEditing ? 'Salvar alterações' : 'Criar módulo';
     }
 
     onClose(): void {
@@ -222,37 +245,69 @@ export class AddModuleComponent {
             role_id: this.cargo?.id
         };
 
-        // Create module via ModuleService
-        this.moduleService.createModule(payload).pipe(
-            catchError((error) => {
-                console.error('Erro ao criar módulo:', error);
-                this.error = error?.message || 'Erro ao criar módulo. Tente novamente.';
-                return of(null);
-            }),
-            finalize(() => {
-                this.isLoading = false;
-                this.cdr.markForCheck();
-            })
-        ).subscribe((response) => {
-            if (response) {
-                const moduleData = {
-                    id: response.data?.id || Date.now(),
-                    name: formData.name,
-                    thumbnail_url: this.uploadedImageUrl || this.imagePreviewUrl || '/assets/images/default-module.jpg',
-                    contentCount: 0,
-                    cargoId: this.cargo?.id
-                };
+        if (this.isEditing && this.module) {
+            const updatePayload = {
+                name: formData.name,
+                image_path: payload.image_path,
+            };
+            this.moduleService.updateModule(this.module.id, updatePayload, token).pipe(
+                catchError((error) => {
+                    console.error('Erro ao atualizar módulo:', error);
+                    this.error = error?.message || 'Erro ao atualizar módulo. Tente novamente.';
+                    return of(null);
+                }),
+                finalize(() => {
+                    this.isLoading = false;
+                    this.cdr.markForCheck();
+                })
+            ).subscribe((response) => {
+                if (response) {
+                    const moduleData = {
+                        id: this.module.id,
+                        name: formData.name,
+                        thumbnail_url: this.uploadedImageUrl || this.imagePreviewUrl || this.module.thumbnail_url,
+                        contentCount: this.module.contentCount || 0,
+                        cargoId: this.cargo?.id
+                    };
+                    this.successMessage = 'Módulo atualizado com sucesso!';
+                    this.moduleUpdated.emit(moduleData);
+                    this.cdr.markForCheck();
+                    setTimeout(() => this.onClose(), 1500);
+                }
+            });
+        } else {
+            // Create module via ModuleService
+            this.moduleService.createModule(payload).pipe(
+                catchError((error) => {
+                    console.error('Erro ao criar módulo:', error);
+                    this.error = error?.message || 'Erro ao criar módulo. Tente novamente.';
+                    return of(null);
+                }),
+                finalize(() => {
+                    this.isLoading = false;
+                    this.cdr.markForCheck();
+                })
+            ).subscribe((response) => {
+                if (response) {
+                    const moduleData = {
+                        id: response.data?.id || Date.now(),
+                        name: formData.name,
+                        thumbnail_url: this.uploadedImageUrl || this.imagePreviewUrl || '/assets/images/default-module.jpg',
+                        contentCount: 0,
+                        cargoId: this.cargo?.id
+                    };
 
-                this.successMessage = 'Módulo criado com sucesso!';
-                this.moduleCreated.emit(moduleData);
-                this.cdr.markForCheck();
+                    this.successMessage = 'Módulo criado com sucesso!';
+                    this.moduleCreated.emit(moduleData);
+                    this.cdr.markForCheck();
 
-                // Close modal after success
-                setTimeout(() => {
-                    this.onClose();
-                }, 1500);
-            }
-        });
+                    // Close modal after success
+                    setTimeout(() => {
+                        this.onClose();
+                    }, 1500);
+                }
+            });
+        }
     }
 
     private uploadImage(file: File): void {

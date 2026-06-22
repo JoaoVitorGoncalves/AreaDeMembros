@@ -1,7 +1,7 @@
 <div class="add-lesson-modal-overlay" (click)="onClose()"></div>
 <div class="add-lesson-modal-container">
     <div class="add-lesson-modal-header">
-        <span>Nova aula</span>
+        <span>{{ isEditing ? 'Editar aula' : 'Nova aula' }}</span>
         <button class="add-lesson-close-btn" (click)="onClose()">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -287,8 +287,8 @@
                 </button>
                 <button type="submit" class="add-lesson-publish-btn" [disabled]="!isFormValid"
                     [title]="getButtonTooltip()">
-                    <span *ngIf="!isLoading">Publicar Aula</span>
-                    <span *ngIf="isLoading">Publicando...</span>
+                    <span *ngIf="!isLoading">{{ isEditing ? 'Salvar alterações' : 'Publicar Aula' }}</span>
+                    <span *ngIf="isLoading">{{ isEditing ? 'Salvando...' : 'Publicando...' }}</span>
                 </button>
             </div>
         </form>

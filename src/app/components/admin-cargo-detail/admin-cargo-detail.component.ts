@@ -68,6 +68,14 @@ export class AdminCargoDetailComponent
     showAddToolSidebarFlag: boolean = false;
     showAddModuleModalFlag: boolean = false;
     showAddLessonModalFlag: boolean = false;
+    showEditToolModalFlag: boolean = false;
+    showEditModuleModalFlag: boolean = false;
+    showEditLessonModalFlag: boolean = false;
+    editToolData: any = null;
+    editModuleData: any = null;
+    editLessonData: any = null;
+    editLessonModuleId: number | null = null;
+    editLessonModuleName: string | null = null;
     addLessonModuleId: number | null = null;
     addLessonModuleName: string | null = null;
     showUserDropdown: boolean = false;
@@ -1286,6 +1294,43 @@ export class AdminCargoDetailComponent
         this.addLessonModuleName = null;
     }
 
+    // Edit Lesson Modal
+    showEditLessonModal(lesson: any, module: any): void {
+        this.editLessonData = lesson;
+        this.editLessonModuleId = module.id;
+        this.editLessonModuleName = module.name;
+        this.showEditLessonModalFlag = true;
+    }
+
+    hideEditLessonModal(): void {
+        this.showEditLessonModalFlag = false;
+        this.editLessonData = null;
+        this.editLessonModuleId = null;
+        this.editLessonModuleName = null;
+    }
+
+    // Edit Module Modal
+    showEditModuleModal(moduleData: any): void {
+        this.editModuleData = moduleData;
+        this.showEditModuleModalFlag = true;
+    }
+
+    hideEditModuleModal(): void {
+        this.showEditModuleModalFlag = false;
+        this.editModuleData = null;
+    }
+
+    // Edit Tool Modal
+    showEditToolModal(tool: any): void {
+        this.editToolData = tool;
+        this.showEditToolModalFlag = true;
+    }
+
+    hideEditToolModal(): void {
+        this.showEditToolModalFlag = false;
+        this.editToolData = null;
+    }
+
     onLessonCreated(lesson: any): void {
         // Atualizar o módulo local com a nova aula
         if (lesson && this.addLessonModuleId) {
@@ -1327,6 +1372,68 @@ export class AdminCargoDetailComponent
         }
 
         this.hideAddLessonModal();
+    }
+
+    onLessonUpdated(lessonData: any): void {
+        if (lessonData && this.editLessonModuleId) {
+            const moduleId = this.editLessonModuleId;
+            const updatedLessonFields: Partial<Lesson> = {
+                name: lessonData.name,
+                description: lessonData.description,
+                thumbnail_url: lessonData.thumbnail_url,
+                video_url: lessonData.video_url,
+            };
+            this.moduleService.updateLessonInAllCaches(moduleId, lessonData.id, updatedLessonFields);
+
+            const moduleIndex = this.modules.findIndex(m => m.id === moduleId);
+            if (moduleIndex !== -1) {
+                const updatedModules = [...this.modules];
+                const module = { ...updatedModules[moduleIndex] };
+                const lessonIndex = module.lessons?.findIndex(l => l.id === lessonData.id);
+                if (lessonIndex !== undefined && lessonIndex >= 0 && module.lessons) {
+                    const updatedLessons = [...module.lessons];
+                    updatedLessons[lessonIndex] = { ...updatedLessons[lessonIndex], ...lessonData };
+                    module.lessons = updatedLessons;
+                    updatedModules[moduleIndex] = module;
+                    this.modules = updatedModules;
+                    this.modulesSubject.next(this.modules);
+                }
+            }
+        }
+        this.hideEditLessonModal();
+    }
+
+    onModuleUpdated(moduleData: any): void {
+        if (moduleData) {
+            const updatedModule: Partial<Module> = {
+                name: moduleData.name,
+                thumbnail_url: moduleData.thumbnail_url,
+            };
+            this.moduleService.updateModuleInAllCaches(moduleData.id, updatedModule);
+            const index = this.modules.findIndex(m => m.id === moduleData.id);
+            const updatedModules = [...this.modules];
+            if (index !== -1) {
+                updatedModules[index] = { ...updatedModules[index], ...updatedModule };
+            }
+            this.modules = updatedModules;
+            this.modulesSubject.next(this.modules);
+        }
+        this.hideEditModuleModal();
+    }
+
+    onToolUpdated(tool: any): void {
+        if (tool) {
+            const index = this.tools.findIndex(t => t.id === tool.id);
+            if (index !== -1) {
+                const updatedTools = [...this.tools];
+                updatedTools[index] = tool;
+                this.tools = updatedTools;
+                this.toolsSubject.next(this.tools);
+                this.applyToolFilter();
+                this.cdr.detectChanges();
+            }
+        }
+        this.hideEditToolModal();
     }
 
     // Métodos para controlar o lesson viewer

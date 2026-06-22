@@ -20,8 +20,14 @@ import { environment } from '../../../environments/environment';
 export class AddLessonComponent implements OnDestroy {
     @Input() moduleId: number | null = null;
     @Input() moduleName: string | null = null;
+    @Input() lesson: any | null = null;
     @Output() close = new EventEmitter<void>();
     @Output() lessonCreated = new EventEmitter<any>();
+    @Output() lessonUpdated = new EventEmitter<any>();
+
+    get isEditing(): boolean {
+        return this.lesson !== null;
+    }
 
     lessonForm: FormGroup;
     isLoading = false;
@@ -78,11 +84,13 @@ export class AddLessonComponent implements OnDestroy {
         const nameValid = this.lessonForm.get('name')?.valid &&
             this.lessonForm.get('name')?.value?.trim()?.length > 0;
 
-        const imageValid = !!(this.uploadedImageUrl &&
+        const imageValid = this.isEditing || !!(
+            this.uploadedImageUrl &&
             !this.isUploadingImage &&
             !this.imageUploadError);
 
-        const videoValid = !!(this.uploadedVideoUrl &&
+        const videoValid = this.isEditing || !!(
+            this.uploadedVideoUrl &&
             !this.isUploadingVideo &&
             !this.videoUploadError);
 
@@ -92,17 +100,19 @@ export class AddLessonComponent implements OnDestroy {
     // Método para gerar tooltip do botão
     getButtonTooltip(): string {
         if (this.isLoading) {
-            return 'Publicando aula...';
+            return this.isEditing ? 'Salvando...' : 'Publicando aula...';
         }
 
         const nameValid = this.lessonForm.get('name')?.valid &&
             this.lessonForm.get('name')?.value?.trim()?.length > 0;
 
-        const imageValid = !!(this.uploadedImageUrl &&
+        const imageValid = this.isEditing || !!(
+            this.uploadedImageUrl &&
             !this.isUploadingImage &&
             !this.imageUploadError);
 
-        const videoValid = !!(this.uploadedVideoUrl &&
+        const videoValid = this.isEditing || !!(
+            this.uploadedVideoUrl &&
             !this.isUploadingVideo &&
             !this.videoUploadError);
 
@@ -128,7 +138,7 @@ export class AddLessonComponent implements OnDestroy {
             return 'Adicione um vídeo';
         }
 
-        return 'Publicar Aula';
+        return this.isEditing ? 'Salvar alterações' : 'Publicar Aula';
     }
 
     ngOnInit(): void {
@@ -140,6 +150,11 @@ export class AddLessonComponent implements OnDestroy {
             this.lessonForm.patchValue({ module_id: this.moduleId });
         }
 
+        // If editing, pre-fill the form with lesson data
+        if (this.isEditing && this.lesson) {
+            this.loadLessonData(this.lesson);
+        }
+
         // Add global listener for selection changes
         document.addEventListener('selectionchange', this.selectionChangeListener);
 
@@ -147,6 +162,21 @@ export class AddLessonComponent implements OnDestroy {
         setTimeout(() => {
             this.initializeEditor();
         }, 100);
+    }
+
+    private loadLessonData(lessonData: any): void {
+        this.lessonForm.patchValue({
+            name: lessonData.name,
+            description: lessonData.description,
+        });
+        if (lessonData.thumbnail_url) {
+            this.uploadedImageUrl = lessonData.thumbnail_url;
+            this.imagePreviewUrl = lessonData.thumbnail_url;
+        }
+        if (lessonData.video_url) {
+            this.uploadedVideoUrl = lessonData.video_url;
+            this.videoPreviewUrl = lessonData.video_url;
+        }
     }
 
     private resetFormState(): void {
@@ -640,44 +670,93 @@ export class AddLessonComponent implements OnDestroy {
             module_id: this.moduleId || this.lessonForm.get('module_id')?.value
         };
 
-        // Create lesson via API
-        this.http.post<any>(`${environment.apiUrl}/api/v1/lessons`, payload, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+        if (this.isEditing && this.lesson) {
+            const updatePayload: any = {
+                name: formData.name,
+                description: formData.description || null,
+            };
+            if (this.uploadedImageUrl) {
+                updatePayload.thumbnail_url = this.uploadedImageUrl;
             }
-        }).pipe(
-            catchError((error) => {
-                console.error('Erro ao criar aula:', error);
-                this.error = error.error?.message || 'Erro ao criar aula. Tente novamente.';
-                return of(null);
-            }),
-            finalize(() => {
-                this.isLoading = false;
-                this.cdr.markForCheck();
-            })
-        ).subscribe((response) => {
-            if (response) {
-                const lessonData = {
-                    id: response.data?.id || Date.now(),
-                    name: formData.name,
-                    description: formData.description,
-                    thumbnail_url: this.uploadedImageUrl ? `https://assets.userfounded.workers.dev/file/${this.uploadedImageUrl}` : (this.imagePreviewUrl || '/assets/images/default-lesson.jpg'),
-                    video_url: `https://assets.userfounded.workers.dev/file/${this.uploadedVideoUrl}`,
-                    module_id: this.moduleId
-                };
-
-                this.successMessage = 'Aula criada com sucesso!';
-                this.lessonCreated.emit(lessonData);
-                this.cdr.markForCheck();
-                this.formSubmittedSuccessfully = true; // Set flag to true on successful submission
-
-                // Close modal after success
-                setTimeout(() => {
-                    this.onClose();
-                }, 1500);
+            if (this.uploadedVideoUrl) {
+                updatePayload.video_url = this.uploadedVideoUrl;
             }
-        });
+
+            this.http.put<any>(`${environment.apiUrl}/api/v1/lessons/${this.lesson.id}`, updatePayload, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }).pipe(
+                catchError((error) => {
+                    console.error('Erro ao atualizar aula:', error);
+                    this.error = error.error?.message || 'Erro ao atualizar aula. Tente novamente.';
+                    return of(null);
+                }),
+                finalize(() => {
+                    this.isLoading = false;
+                    this.cdr.markForCheck();
+                })
+            ).subscribe((response) => {
+                if (response) {
+                    const lessonData = {
+                        ...this.lesson,
+                        name: formData.name,
+                        description: formData.description,
+                        thumbnail_url: this.uploadedImageUrl || this.lesson.thumbnail_url,
+                        video_url: this.uploadedVideoUrl || this.lesson.video_url,
+                    };
+
+                    this.successMessage = 'Aula atualizada com sucesso!';
+                    this.lessonUpdated.emit(lessonData);
+                    this.cdr.markForCheck();
+                    this.formSubmittedSuccessfully = true;
+
+                    setTimeout(() => {
+                        this.onClose();
+                    }, 1500);
+                }
+            });
+        } else {
+            // Create lesson via API
+            this.http.post<any>(`${environment.apiUrl}/api/v1/lessons`, payload, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }).pipe(
+                catchError((error) => {
+                    console.error('Erro ao criar aula:', error);
+                    this.error = error.error?.message || 'Erro ao criar aula. Tente novamente.';
+                    return of(null);
+                }),
+                finalize(() => {
+                    this.isLoading = false;
+                    this.cdr.markForCheck();
+                })
+            ).subscribe((response) => {
+                if (response) {
+                    const lessonData = {
+                        id: response.data?.id || Date.now(),
+                        name: formData.name,
+                        description: formData.description,
+                        thumbnail_url: this.uploadedImageUrl ? `https://assets.userfounded.workers.dev/file/${this.uploadedImageUrl}` : (this.imagePreviewUrl || '/assets/images/default-lesson.jpg'),
+                        video_url: `https://assets.userfounded.workers.dev/file/${this.uploadedVideoUrl}`,
+                        module_id: this.moduleId
+                    };
+
+                    this.successMessage = 'Aula criada com sucesso!';
+                    this.lessonCreated.emit(lessonData);
+                    this.cdr.markForCheck();
+                    this.formSubmittedSuccessfully = true; // Set flag to true on successful submission
+
+                    // Close modal after success
+                    setTimeout(() => {
+                        this.onClose();
+                    }, 1500);
+                }
+            });
+        }
     }
 
     // --- UPLOAD METHODS ---

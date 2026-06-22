@@ -20,8 +20,13 @@ import { AuthService } from '../../services/auth.service';
 export class AddToolComponent implements OnInit {
     @Output() close = new EventEmitter<void>();
     @Output() toolCreated = new EventEmitter<Tool>();
+    @Output() toolUpdated = new EventEmitter<Tool>();
     @Input() cargo: Role | null = null;
+    @Input() tool: Tool | null = null;
 
+    get isEditing(): boolean {
+        return this.tool !== null;
+    }
 
     toolForm!: FormGroup;
     isLoading = false;
@@ -50,6 +55,24 @@ export class AddToolComponent implements OnInit {
             image_url: ['', [Validators.maxLength(255)]],
             link: ['', [Validators.required, Validators.maxLength(255), this.urlValidator()]]
         });
+
+        if (this.isEditing && this.tool) {
+            this.loadToolData(this.tool);
+        }
+    }
+
+    private loadToolData(tool: Tool): void {
+        this.toolForm.patchValue({
+            name: tool.name,
+            description: tool.description,
+            image_url: tool.image_url,
+            link: tool.link,
+        });
+
+        if (tool.image_url) {
+            this.uploadedImageUrl = tool.image_url;
+            this.imagePreviewUrl = tool.image_url;
+        }
     }
 
     // Validador customizado para URL
@@ -82,7 +105,8 @@ export class AddToolComponent implements OnInit {
         const linkValid = this.toolForm.get('link')?.valid &&
             this.toolForm.get('link')?.value?.trim()?.length > 0;
 
-        const imageValid = !!(this.uploadedImageUrl &&
+        const imageValid = this.isEditing || !!(
+            this.uploadedImageUrl &&
             !this.isUploadingImage &&
             !this.imageUploadError);
 
@@ -92,14 +116,15 @@ export class AddToolComponent implements OnInit {
     // Método para gerar tooltip do botão
     getButtonTooltip(): string {
         if (this.isLoading) {
-            return 'Criando ferramenta...';
+            return this.isEditing ? 'Salvando...' : 'Criando ferramenta...';
         }
 
         const nameValid = this.toolForm.get('name')?.valid &&
             this.toolForm.get('name')?.value?.trim()?.length > 0;
         const linkValid = this.toolForm.get('link')?.valid &&
             this.toolForm.get('link')?.value?.trim()?.length > 0;
-        const imageValid = !!(this.uploadedImageUrl &&
+        const imageValid = this.isEditing || !!(
+            this.uploadedImageUrl &&
             !this.isUploadingImage &&
             !this.imageUploadError);
 
@@ -119,7 +144,7 @@ export class AddToolComponent implements OnInit {
             return 'Adicione uma imagem';
         }
 
-        return 'Criar ferramenta';
+        return this.isEditing ? 'Salvar alterações' : 'Criar ferramenta';
     }
 
     onSubmit(): void {
@@ -154,28 +179,50 @@ export class AddToolComponent implements OnInit {
         const payload = {
             ...this.toolForm.value,
             image_url: imageUrl,
-            roles: this.cargo ? [this.cargo.id] : []
         };
-        this.toolsService.createTool(payload).pipe(
-            catchError((err: Error) => {
-                this.error = err.message;
-                return of(null);
-            }),
-            finalize(() => {
-                this.isLoading = false;
-                this.cdr.markForCheck();
-            })
-        ).subscribe((newTool: Tool | null) => {
-            if (newTool) {
-                this.toolsService.addToolsToCache([newTool]); // Atualiza o cache global imediatamente
-                this.toolCreated.emit(newTool);
-            }
-        });
+
+        if (this.isEditing && this.tool) {
+            const token = this.authService.getToken() || '';
+            this.toolsService.updateTool(this.tool.id, payload, token).pipe(
+                catchError((err: Error) => {
+                    this.error = err.message;
+                    return of(null);
+                }),
+                finalize(() => {
+                    this.isLoading = false;
+                    this.cdr.markForCheck();
+                })
+            ).subscribe((updatedTool: Tool | null) => {
+                if (updatedTool) {
+                    this.toolUpdated.emit(updatedTool);
+                }
+            });
+        } else {
+            const payloadWithRoles = {
+                ...payload,
+                roles: this.cargo ? [this.cargo.id] : []
+            };
+            this.toolsService.createTool(payloadWithRoles).pipe(
+                catchError((err: Error) => {
+                    this.error = err.message;
+                    return of(null);
+                }),
+                finalize(() => {
+                    this.isLoading = false;
+                    this.cdr.markForCheck();
+                })
+            ).subscribe((newTool: Tool | null) => {
+                if (newTool) {
+                    this.toolsService.addToolsToCache([newTool]);
+                    this.toolCreated.emit(newTool);
+                }
+            });
+        }
     }
 
     onClose(): void {
         // If there's an uploaded image and the form hasn't been submitted, delete the image
-        if (this.uploadedImageUrl && !this.isLoading) {
+        if (this.uploadedImageUrl && !this.isLoading && !this.isEditing) {
             this.deleteImageFromServer();
         }
 

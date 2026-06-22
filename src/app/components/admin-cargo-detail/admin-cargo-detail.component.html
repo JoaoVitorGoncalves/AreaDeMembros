@@ -261,12 +261,23 @@
                   position: absolute;
                   z-index: 1000;
                 "
-                (click)="$event.stopPropagation()"
-              >
-                <div
-                  class="dropdown-menu-item"
-                  (click)="onDeleteModule(module)"
+                  (click)="$event.stopPropagation()"
                 >
+                  <div
+                    class="dropdown-menu-item"
+                    (click)="showEditModuleModal(module)"
+                  >
+                    <span class="dropdown-menu-item-icon">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M11.5 1.5L14.5 4.5L5 14H2V11L11.5 1.5Z" stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                    Editar
+                  </div>
+                  <div
+                    class="dropdown-menu-item"
+                    (click)="onDeleteModule(module)"
+                  >
                   <span class="dropdown-menu-item-icon">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path
@@ -393,12 +404,23 @@
                       position: absolute;
                       z-index: 1000;
                     "
-                    (click)="$event.stopPropagation()"
+                  (click)="$event.stopPropagation()"
+                >
+                  <div
+                    class="dropdown-menu-item"
+                    (click)="showEditLessonModal(lesson, module)"
                   >
-                    <div
-                      class="dropdown-menu-item"
-                      (click)="onDeleteLesson(lesson, module)"
-                    >
+                    <span class="dropdown-menu-item-icon">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M11.5 1.5L14.5 4.5L5 14H2V11L11.5 1.5Z" stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                    Editar
+                  </div>
+                  <div
+                    class="dropdown-menu-item"
+                    (click)="onDeleteLesson(lesson, module)"
+                  >
                       <span class="dropdown-menu-item-icon">
                         <svg
                           width="16"
@@ -1005,6 +1027,14 @@
                   "
                   (click)="$event.stopPropagation()"
                 >
+                  <div class="dropdown-menu-item" (click)="showEditToolModal(tool)">
+                    <span class="dropdown-menu-item-icon">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M11.5 1.5L14.5 4.5L5 14H2V11L11.5 1.5Z" stroke="#EFEFEF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                    Editar
+                  </div>
                   <div class="dropdown-menu-item" (click)="onDeleteTool(tool)">
                     <span class="dropdown-menu-item-icon">
                       <svg
@@ -1256,6 +1286,35 @@
     [moduleName]="addLessonModuleName"
     (close)="hideAddLessonModal()"
     (lessonCreated)="onLessonCreated($event)"
+  >
+  </app-add-lesson>
+
+  <!-- Edit Tool Modal -->
+  <app-add-tool
+    *ngIf="showEditToolModalFlag"
+    [cargo]="cargo"
+    [tool]="editToolData"
+    (close)="hideEditToolModal()"
+    (toolUpdated)="onToolUpdated($event)"
+  ></app-add-tool>
+
+  <!-- Edit Module Modal -->
+  <app-add-module
+    *ngIf="showEditModuleModalFlag"
+    [cargo]="cargo"
+    [module]="editModuleData"
+    (close)="hideEditModuleModal()"
+    (moduleUpdated)="onModuleUpdated($event)"
+  ></app-add-module>
+
+  <!-- Edit Lesson Modal -->
+  <app-add-lesson
+    *ngIf="showEditLessonModalFlag"
+    [moduleId]="editLessonModuleId"
+    [moduleName]="editLessonModuleName"
+    [lesson]="editLessonData"
+    (close)="hideEditLessonModal()"
+    (lessonUpdated)="onLessonUpdated($event)"
   >
   </app-add-lesson>
   <ng-container *ngIf="showAddExistingUserModal && (users$ | async) as users">

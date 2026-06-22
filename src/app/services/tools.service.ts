@@ -323,4 +323,33 @@ export class ToolsService {
             catchError(err => this.handleError(err))
         );
     }
+
+    /**
+     * Update an existing tool.
+     * Only accessible by admin users.
+     */
+    updateTool(toolId: number, toolData: Partial<Tool>, token: string): Observable<Tool> {
+        const url = `${this.API_URL}/${toolId}`;
+        const headers: any = { 'Authorization': `Bearer ${token}` };
+        return this.http.put<any>(url, toolData, { headers }).pipe(
+            tap((response) => {
+                if (response && response.success) {
+                    const updatedTool: Tool = response.data;
+                    const currentData = this.toolsSubject.getValue();
+                    if (currentData) {
+                        const updatedTools = currentData.tools.map(t =>
+                            t.id === toolId ? updatedTool : t
+                        );
+                        const updatedResult: ToolsResult = {
+                            ...currentData,
+                            tools: updatedTools,
+                        };
+                        this.toolsSubject.next(updatedResult);
+                    }
+                }
+            }),
+            map((response) => response.data),
+            catchError(err => this.handleError(err))
+        );
+    }
 } 

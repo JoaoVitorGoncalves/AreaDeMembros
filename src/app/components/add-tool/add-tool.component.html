@@ -1,7 +1,7 @@
 <div class="modal-overlay" (click)="onClose()"></div>
 <div class="modal-container">
     <div class="modal-header">
-        <h2>Adicionar ferramentas</h2>
+        <h2>{{ isEditing ? 'Editar ferramenta' : 'Adicionar ferramentas' }}</h2>
         <button class="close-btn" (click)="onClose()">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -54,11 +54,11 @@
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 260px;">
                     <label>Miniatura da ferramenta</label>
-                    <div class="add-tool-image-upload" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
-                        [class.has-image]="selectedImage" [class.uploading]="isUploadingImage"
-                        [class.uploaded]="uploadedImageUrl && !isUploadingImage && !imageUploadError"
-                        [class.error]="imageUploadError">
-                        <div class="add-tool-image-preview" *ngIf="selectedImage; else imagePlaceholder">
+                        <div class="add-tool-image-upload" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
+                            [class.has-image]="selectedImage || (isEditing && imagePreviewUrl)" [class.uploading]="isUploadingImage"
+                            [class.uploaded]="uploadedImageUrl && !isUploadingImage && !imageUploadError"
+                            [class.error]="imageUploadError">
+                        <div class="add-tool-image-preview" *ngIf="selectedImage || (isEditing && imagePreviewUrl); else imagePlaceholder">
                             <img [src]="imagePreviewUrl" alt="Preview da imagem" class="add-tool-image-thumb">
                             <div class="image-actions">
                                 <!-- <button type="button" class="change-image-btn" (click)="triggerFileInput()">Trocar
@@ -116,8 +116,8 @@
             <div class="modal-actions">
                 <button type="button" class="cancel-btn" (click)="onClose()">Cancelar</button>
                 <button type="submit" class="create-btn" [disabled]="!isFormValid" [title]="getButtonTooltip()">
-                    <span *ngIf="isLoading">Criando...</span>
-                    <span *ngIf="!isLoading">Criar ferramenta</span>
+                    <span *ngIf="isLoading">{{ isEditing ? 'Salvando...' : 'Criando...' }}</span>
+                    <span *ngIf="!isLoading">{{ isEditing ? 'Salvar alterações' : 'Criar ferramenta' }}</span>
                 </button>
             </div>
         </form>
