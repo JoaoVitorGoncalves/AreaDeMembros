@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.gitignore
+.github
+.angular
+.cursor
+.octto
+.vscode
+.editorconfig
+README.md
+*.md
+docs
