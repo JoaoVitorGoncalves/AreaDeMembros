@@ -10,8 +10,9 @@ import { AdminCargoDetailComponent } from '../../components/admin-cargo-detail/a
 import { AddRoleComponent } from '../../components/add-role/add-role.component';
 import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal.component';
 import { map } from 'rxjs/operators';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { LessonService } from '../../services/lesson.service';
+import { AdminService } from '../../services/admin.service';
 
 interface CourseModules {
   roleName: string;
@@ -72,10 +73,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
+    private adminService: AdminService,
     private moduleService: ModuleService,
     private rolesService: RolesService,
     private cdr: ChangeDetectorRef,
     private router: Router,
+    private route: ActivatedRoute,
     private lessonService: LessonService
   ) {
     this.modules$ = this.moduleService.modules$;
@@ -92,7 +95,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.currentUser?.roles?.length) {
       this.userRole = this.currentUser.roles[0];
     }
-    this.isAdmin = this.authService.isAdmin();
+    this.isAdmin = this.router.url.startsWith('/admin/')
+      ? this.adminService.isAuthenticated()
+      : this.authService.isAdmin();
 
     if (this.isAdmin) {
       this.rolesService.getRoles().subscribe(roles => {

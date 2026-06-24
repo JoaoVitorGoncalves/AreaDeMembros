@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpEventType, HttpRequest } from '@angular/common/http';
 import { Observable, from, of, Subject } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { AdminService } from './admin.service';
 
 export interface UploadResponse {
     success: boolean;
@@ -32,16 +33,27 @@ class MultipartUploader {
     private apiUrl: string;
     private chunkSize: number;
     private currentUpload: { uploadId: string; filename: string } | null = null;
+    private adminService: AdminService;
 
-    constructor(apiUrl: string) {
+    private get tenantHash(): string {
+        return this.adminService?.getTenantHash() || '';
+    }
+
+    private multipartUrl(subPath: string): string {
+        const hash = this.tenantHash;
+        return hash ? `${this.apiUrl}/upload/multipart/${hash}${subPath}` : `${this.apiUrl}/upload/multipart${subPath}`;
+    }
+
+    constructor(apiUrl: string, adminService?: AdminService) {
         this.apiUrl = apiUrl;
+        this.adminService = adminService as AdminService;
         this.chunkSize = 50 * 1024 * 1024; // 50MB por parte (limite máximo do Worker)
     }
 
     async uploadFile(file: File, onProgress?: (progress: number, currentPart: number, totalParts: number) => void, onInit?: (uploadId: string, filename: string) => void): Promise<UploadResponse> {
         try {
             // 1. Inicializar upload multipart
-            const initResponse = await fetch(`${this.apiUrl}/upload/multipart/init`, {
+            const initResponse = await fetch(this.multipartUrl('/init'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +89,7 @@ class MultipartUploader {
                 const chunk = file.slice(start, end);
                 const partNumber = i + 1;
 
-                const partResponse = await fetch(`${this.apiUrl}/upload/multipart/part?filename=${encodeURIComponent(filename)}&uploadId=${uploadId}&partNumber=${partNumber}`, {
+                const partResponse = await fetch(`${this.multipartUrl('/part')}?filename=${encodeURIComponent(filename)}&uploadId=${uploadId}&partNumber=${partNumber}`, {
                     method: 'POST',
                     body: chunk
                 });
@@ -100,7 +112,7 @@ class MultipartUploader {
             }
 
             // 3. Completar upload multipart
-            const completeResponse = await fetch(`${this.apiUrl}/upload/multipart/complete`, {
+            const completeResponse = await fetch(this.multipartUrl('/complete'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -134,7 +146,7 @@ class MultipartUploader {
     // Método para cancelar upload se necessário
     async abortUpload(filename: string, uploadId: string): Promise<void> {
         try {
-            const response = await fetch(`${this.apiUrl}/upload/multipart/abort`, {
+            const response = await fetch(this.multipartUrl('/abort'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -179,8 +191,17 @@ export class UploadService {
     private readonly multipartThreshold = 100 * 1024 * 1024; // 100MB
     private multipartUploader: MultipartUploader;
 
-    constructor(private http: HttpClient) {
-        this.multipartUploader = new MultipartUploader(this.baseUrl);
+    private get tenantPath(): string {
+        const hash = this.adminService.getTenantHash();
+        return hash ? `${hash}` : '';
+    }
+
+    private get apiBase(): string {
+        return this.tenantPath ? `${this.baseUrl}/${this.tenantPath}` : this.baseUrl;
+    }
+
+    constructor(private http: HttpClient, private adminService: AdminService) {
+        this.multipartUploader = new MultipartUploader(this.baseUrl, this.adminService);
     }
 
     uploadVideo(file: File): Observable<UploadProgress> {
@@ -193,7 +214,7 @@ export class UploadService {
         const formData = new FormData();
         formData.append('file', file);
 
-        const req = new HttpRequest('POST', `${this.baseUrl}/upload`, formData, {
+        const req = new HttpRequest('POST', `${this.apiBase}/upload`, formData, {
             reportProgress: true,
             responseType: 'json'
         });
@@ -237,7 +258,7 @@ export class UploadService {
         const formData = new FormData();
         formData.append('file', file);
 
-        const req = new HttpRequest('POST', `${this.baseUrl}/upload`, formData, {
+        const req = new HttpRequest('POST', `${this.apiBase}/upload`, formData, {
             reportProgress: true,
             responseType: 'json'
         });

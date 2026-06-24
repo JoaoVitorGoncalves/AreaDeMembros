@@ -7,6 +7,7 @@ import { Role } from '../../models/role.model';
 import { ModuleService } from '../../services/module.service';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { AdminService } from '../../services/admin.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -41,12 +42,17 @@ export class AddModuleComponent {
     uploadedImageUrl: string | null = null;
     private uploadAbortController: AbortController | null = null;
 
+    private get tenantHash(): string {
+        return this.adminService.getTenantHash() || '';
+    }
+
     constructor(
         private fb: FormBuilder,
         private cdr: ChangeDetectorRef,
         private moduleService: ModuleService,
         private http: HttpClient,
-        private authService: AuthService
+        private authService: AuthService,
+        private adminService: AdminService
     ) {
         this.moduleForm = this.fb.group({
             name: ['', [Validators.required, Validators.maxLength(100)]],
@@ -240,7 +246,7 @@ export class AddModuleComponent {
         // Prepare payload for module creation
         const payload = {
             name: formData.name,
-            image_path: `https://assets.userfounded.workers.dev/module-assets/file/${this.uploadedImageUrl}` || `https://assets.userfounded.workers.dev/module-assets/file/${this.imagePreviewUrl}`,
+            image_path: `https://assets.userfounded.workers.dev/module-assets/${this.tenantHash}/file/${this.uploadedImageUrl}` || `https://assets.userfounded.workers.dev/module-assets/${this.tenantHash}/file/${this.imagePreviewUrl}`,
             role_name: this.cargo?.name || '',
             role_id: this.cargo?.id
         };
@@ -336,7 +342,7 @@ export class AddModuleComponent {
         const formData = new FormData();
         formData.append('file', file, fileName);
 
-        const url = 'https://assets.userfounded.workers.dev/module-assets/upload';
+        const url = `https://assets.userfounded.workers.dev/module-assets/${this.tenantHash}/upload`;
 
         // Create a subscription that we can cancel
         const subscription = this.http.post<any>(url, formData).pipe(
@@ -420,7 +426,7 @@ export class AddModuleComponent {
             return;
         }
 
-        const deleteUrl = `https://assets.userfounded.workers.dev/module-assets/delete/${imageName}`;
+        const deleteUrl = `https://assets.userfounded.workers.dev/module-assets/${this.tenantHash}/delete/${imageName}`;
 
         this.http.delete(deleteUrl, {
             headers: {

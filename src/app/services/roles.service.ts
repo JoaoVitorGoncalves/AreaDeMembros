@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject, throwError, timer } from 'rxjs';
 import { map, catchError, shareReplay, tap, finalize, retryWhen, delayWhen } from 'rxjs/operators';
 import { Role, RolesResponse } from '../models/role.model';
 import { AuthService } from './auth.service';
+import { AdminService } from './admin.service';
 import { HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -32,7 +33,19 @@ export class RolesService {
 
     private inFlightRequest$: Observable<RolesResult> | null = null;
 
-    constructor(private http: HttpClient, private authService: AuthService) { }
+    constructor(
+        private http: HttpClient,
+        private authService: AuthService,
+        private adminService: AdminService
+    ) { }
+
+    private get isAdminUser(): boolean {
+        return this.authService.isAdmin() || this.adminService.isAuthenticated();
+    }
+
+    private get authToken(): string | null {
+        return this.authService.getToken() || this.adminService.getToken();
+    }
 
     getRoles(): Observable<RolesResult> {
         if (this.rolesCache && this.isCacheValid()) {
@@ -126,10 +139,10 @@ export class RolesService {
 
     createRole(data: { name: string; active?: boolean; support_email?: string; support_phone?: string }): Observable<Role> {
         console.log(data);
-        if (!this.authService.isAdmin()) {
+        if (!this.isAdminUser) {
             return throwError(() => new Error('Acesso negado: apenas administradores podem criar cargos.'));
         }
-        const token = this.authService.getToken();
+        const token = this.authToken;
         if (!token) {
             return throwError(() => new Error('Token de autenticação não encontrado. Faça login novamente.'));
         }
@@ -137,7 +150,6 @@ export class RolesService {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
         });
-        // Envia todos os campos recebidos, inclusive support_email e support_phone
         return this.http.post<{ success: boolean; data: Role; message?: string }>(this.API_URL, data, { headers }).pipe(
             map(response => {
                 if (!response.success) {
@@ -160,10 +172,10 @@ export class RolesService {
     }
 
     updateRole(id: number, data: Partial<Pick<Role, 'name' | 'active'>>): Observable<Role> {
-        if (!this.authService.isAdmin()) {
+        if (!this.isAdminUser) {
             return throwError(() => new Error('Acesso negado: apenas administradores podem editar cargos.'));
         }
-        const token = this.authService.getToken();
+        const token = this.authToken;
         if (!token) {
             return throwError(() => new Error('Token de autenticação não encontrado. Faça login novamente.'));
         }
@@ -241,10 +253,10 @@ export class RolesService {
     }
 
     deleteRole(id: number): Observable<void> {
-        if (!this.authService.isAdmin()) {
+        if (!this.isAdminUser) {
             return throwError(() => new Error('Acesso negado: apenas administradores podem excluir cargos.'));
         }
-        const token = this.authService.getToken();
+        const token = this.authToken;
         if (!token) {
             return throwError(() => new Error('Token de autenticação não encontrado. Faça login novamente.'));
         }

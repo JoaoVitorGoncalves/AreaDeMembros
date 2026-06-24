@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Optional } from '@angular/core';
 import {
     HttpClient,
     HttpParams,
@@ -16,6 +16,7 @@ import {
     filter,
 } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { AdminService } from './admin.service';
 import { environment } from '../../environments/environment';
 
 export interface Module {
@@ -107,6 +108,7 @@ export class ModuleService {
     constructor(
         private http: HttpClient,
         private authService: AuthService,
+        private adminService: AdminService,
     ) { }
 
     loadModules(): Observable<Module[]> {
@@ -269,8 +271,8 @@ export class ModuleService {
 
     // Método para carregar módulos por cargo específico (para admin)
     loadModulesByRole(roleName: string, roleId?: number): Observable<Module[]> {
-        const token = this.authService.getToken();
-        const isAdmin = this.authService.isAdmin();
+        const token = this.authService.getToken() || this.adminService.getToken();
+        const isAdmin = this.authService.isAdmin() || this.adminService.isAuthenticated();
 
         if (!token || !isAdmin) {
             return of([]);
@@ -675,8 +677,8 @@ export class ModuleService {
     getAllModulesForAdminByRoleId(
         roleId: number,
     ): Observable<{ modules: Module[]; totalModules: number }> {
-        const token = this.authService.getToken();
-        const isAdmin = this.authService.isAdmin();
+        const token = this.authService.getToken() || this.adminService.getToken();
+        const isAdmin = this.authService.isAdmin() || this.adminService.isAuthenticated();
 
         if (!token || !isAdmin) {
             return of({ modules: [], totalModules: 0 });

@@ -2,30 +2,40 @@ import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { AdminService } from './admin.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
-    constructor(private authService: AuthService) { }
+    constructor(
+        private authService: AuthService,
+        private adminService: AdminService
+    ) { }
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        // Não adicionar token para requisições de login
-        if (req.url.includes('/auth/login')) {
+        // Não adicionar token para requisições de login (regular ou admin)
+        if (req.url.includes('/auth/login') || req.url.includes('/admin/login')) {
             return next.handle(req);
         }
 
-        // Adicionar token se o usuário estiver autenticado
-        if (this.authService.isAuthenticated()) {
-            const authToken = this.authService.getFullAuthToken();
+        // Prioridade: admin token > user token
+        const adminToken = this.adminService.getFullAuthToken();
+        const userToken = this.authService.getFullAuthToken();
+        const token = adminToken || userToken;
 
-            if (authToken) {
-                const authReq = req.clone({
-                    headers: req.headers.set('Authorization', authToken)
-                });
-                return next.handle(authReq);
+        if (token) {
+            let headers = req.headers.set('Authorization', token);
+
+            // Se for admin, adicionar X-Tenant-Hash
+            const tenantHash = this.adminService.getTenantHash();
+            if (tenantHash) {
+                headers = headers.set('X-Tenant-Hash', tenantHash);
             }
+
+            const authReq = req.clone({ headers });
+            return next.handle(authReq);
         }
 
         return next.handle(req);
     }
-} 
+}

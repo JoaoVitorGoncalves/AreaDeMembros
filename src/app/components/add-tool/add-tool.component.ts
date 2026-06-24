@@ -8,6 +8,7 @@ import { Tool } from '../../models/tool.model';
 import { HttpClient } from '@angular/common/http';
 import { Role } from '../../models/role.model';
 import { AuthService } from '../../services/auth.service';
+import { AdminService } from '../../services/admin.service';
 
 @Component({
     selector: 'app-add-tool',
@@ -40,12 +41,17 @@ export class AddToolComponent implements OnInit {
     uploadedImageUrl: string | null = null;
     private uploadAbortController: AbortController | null = null;
 
+    private get tenantHash(): string {
+        return this.adminService.getTenantHash() || '';
+    }
+
     constructor(
         private fb: FormBuilder,
         private toolsService: ToolsService,
         private http: HttpClient,
         private cdr: ChangeDetectorRef,
-        private authService: AuthService
+        private authService: AuthService,
+        private adminService: AdminService
     ) { }
 
     ngOnInit(): void {
@@ -174,7 +180,7 @@ export class AddToolComponent implements OnInit {
         // Monta o payload incluindo o cargo atual
         let imageUrl = this.toolForm.value.image_url;
         if (imageUrl && !imageUrl.startsWith('http')) {
-            imageUrl = `https://assets.userfounded.workers.dev/tools-assets/file/${imageUrl}`;
+            imageUrl = `https://assets.userfounded.workers.dev/tools-assets/${this.tenantHash}/file/${imageUrl}`;
         }
         const payload = {
             ...this.toolForm.value,
@@ -321,7 +327,7 @@ export class AddToolComponent implements OnInit {
         const formData = new FormData();
         formData.append('file', file, fileName);
 
-        const url = 'https://assets.userfounded.workers.dev/tools-assets/upload';
+        const url = `https://assets.userfounded.workers.dev/tools-assets/${this.tenantHash}/upload`;
 
         // Create a subscription that we can cancel
         const subscription = this.http.post<any>(url, formData).pipe(
@@ -404,7 +410,7 @@ export class AddToolComponent implements OnInit {
             return;
         }
 
-        const deleteUrl = `https://assets.userfounded.workers.dev/tools-assets/delete/${imageName}`;
+        const deleteUrl = `https://assets.userfounded.workers.dev/tools-assets/${this.tenantHash}/delete/${imageName}`;
 
         this.http.delete(deleteUrl, {
             headers: {

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders, HttpEvent, HttpRequest } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { AdminService } from '../../services/admin.service';
 import { UploadService, UploadProgress, UploadResponse } from '../../services/upload.service';
 import { of } from 'rxjs';
 import { catchError, finalize, map, switchMap } from 'rxjs/operators';
@@ -63,12 +64,17 @@ export class AddLessonComponent implements OnDestroy {
     // Propriedade para controlar o foco do editor
     private isEditorFocused = false;
 
+    private get tenantHash(): string {
+        return this.adminService.getTenantHash() || '';
+    }
+
     constructor(
         private fb: FormBuilder,
         private cdr: ChangeDetectorRef,
         private http: HttpClient,
         private authService: AuthService,
-        private uploadService: UploadService
+        private uploadService: UploadService,
+        private adminService: AdminService
     ) {
         this.lessonForm = this.fb.group({
             name: ['', [Validators.required, Validators.maxLength(150)]],
@@ -740,8 +746,8 @@ export class AddLessonComponent implements OnDestroy {
                         id: response.data?.id || Date.now(),
                         name: formData.name,
                         description: formData.description,
-                        thumbnail_url: this.uploadedImageUrl ? `https://assets.userfounded.workers.dev/file/${this.uploadedImageUrl}` : (this.imagePreviewUrl || '/assets/images/default-lesson.jpg'),
-                        video_url: `https://assets.userfounded.workers.dev/file/${this.uploadedVideoUrl}`,
+                        thumbnail_url: this.uploadedImageUrl ? `https://assets.userfounded.workers.dev/${this.tenantHash}/file/${this.uploadedImageUrl}` : (this.imagePreviewUrl || '/assets/images/default-lesson.jpg'),
+                        video_url: `https://assets.userfounded.workers.dev/${this.tenantHash}/file/${this.uploadedVideoUrl}`,
                         module_id: this.moduleId
                     };
 
@@ -947,7 +953,7 @@ export class AddLessonComponent implements OnDestroy {
             return;
         }
 
-        const deleteUrl = `https://assets.userfounded.workers.dev/delete/${imageName}`;
+        const deleteUrl = `https://assets.userfounded.workers.dev/${this.tenantHash}/delete/${imageName}`;
 
         this.http.delete(deleteUrl, {
             headers: {
@@ -974,7 +980,7 @@ export class AddLessonComponent implements OnDestroy {
             return;
         }
 
-        const deleteUrl = `https://assets.userfounded.workers.dev/delete/${videoName}`;
+        const deleteUrl = `https://assets.userfounded.workers.dev/${this.tenantHash}/delete/${videoName}`;
 
         this.http.delete(deleteUrl, {
             headers: {

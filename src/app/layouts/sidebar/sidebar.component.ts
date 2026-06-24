@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
-import { RouterModule } from '@angular/router';
+import { AdminService } from '../../services/admin.service';
+import { Router, RouterModule } from '@angular/router';
 import { SvgIconPipe } from '../../pipes/svg-icon.pipe';
 import { ModuleService } from '../../services/module.service';
 import { LessonService } from '../../services/lesson.service';
@@ -28,15 +29,19 @@ export class SidebarComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
+    private adminService: AdminService,
     private moduleService: ModuleService,
     private lessonService: LessonService,
     private rolesService: RolesService,
     private collaboratorsService: CollaboratorsService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
-    this.isAdmin = this.authService.isAdmin();
+    this.isAdmin = this.router.url.startsWith('/admin/')
+      ? this.adminService.isAuthenticated()
+      : this.authService.isAdmin();
     this.moduleService.modules$.subscribe(modules => {
       this.modules = modules;
       this.updateTotalGlobalProgress();
@@ -113,6 +118,17 @@ export class SidebarComponent implements OnInit {
   }
 
   logout(): void {
-    this.authService.logout();
+    if (this.router.url.startsWith('/admin/')) {
+      const hash = this.adminService.getTenantHash();
+      this.adminService.logout();
+      this.authService.logout();
+      if (hash) {
+        this.router.navigate([`/admin/${hash}/login`]);
+      } else {
+        this.router.navigate(['/admin/login']);
+      }
+    } else {
+      this.authService.logout();
+    }
   }
 }
