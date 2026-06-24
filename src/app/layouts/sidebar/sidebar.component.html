@@ -7,7 +7,7 @@
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: true }"
         >
-          <a routerLink="/analytics" class="nav-link">
+          <a [routerLink]="adminRoutePrefix + '/analytics'" class="nav-link">
             <span class="nav-icon">
               <div
                 [innerHTML]="'sidebar-analytics' | svgIcon: '' : 15 : 15"
@@ -21,7 +21,7 @@
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: true }"
         >
-          <a routerLink="/dashboard" class="nav-link">
+          <a [routerLink]="adminRoutePrefix + '/dashboard'" class="nav-link">
             <span class="nav-icon">
               <div
                 [innerHTML]="'sidebar-dashboard' | svgIcon: '' : 20 : 20"
@@ -31,7 +31,7 @@
           </a>
         </li>
         <li class="nav-item" routerLinkActive="active" *ngIf="isAdmin">
-          <a routerLink="/collaborators" class="nav-link">
+          <a [routerLink]="adminRoutePrefix + '/collaborators'" class="nav-link">
             <span class="nav-icon">
               <div
                 [innerHTML]="'sidebar-collaborators' | svgIcon: '' : 20 : 20"
@@ -41,7 +41,7 @@
           </a>
         </li>
         <li class="nav-item" routerLinkActive="active">
-          <a routerLink="/integrations" class="nav-link">
+          <a [routerLink]="adminRoutePrefix + '/integrations'" class="nav-link">
             <span class="nav-icon">
               <div [innerHTML]="'sidebar-integ' | svgIcon: '' : 15 : 15"></div>
             </span>
@@ -49,7 +49,7 @@
           </a>
         </li>
         <li class="nav-item" routerLinkActive="active">
-          <a routerLink="/settings" class="nav-link">
+          <a [routerLink]="adminRoutePrefix + '/settings'" class="nav-link">
             <span class="nav-icon">
               <div
                 [innerHTML]="'sidebar-settings' | svgIcon: '' : 15 : 15"

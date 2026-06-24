@@ -36,6 +36,7 @@ import { AddExistingToolComponent } from '../add-existing-tool/add-existing-tool
 import { AddExistingModuleComponent } from '../add-existing-module/add-existing-module.component';
 import { ConfirmModalComponent } from '../confirm-modal/confirm-modal.component';
 import { AuthService } from '../../services/auth.service';
+import { AdminService } from '../../services/admin.service';
 
 @Component({
     selector: 'app-admin-cargo-detail',
@@ -496,6 +497,7 @@ export class AdminCargoDetailComponent
         private router: Router,
         private cdr: ChangeDetectorRef, // Adicionado para detecção de mudanças
         private authService: AuthService,
+        private adminService: AdminService,
     ) {
         this.users$ = this.usersService.users$;
         this.loading$ = this.usersService.loading$;
@@ -1438,8 +1440,12 @@ export class AdminCargoDetailComponent
 
     // Métodos para controlar o lesson viewer
     showLessonViewer(lesson: Lesson, module: Module): void {
-        // Navegar para a rota do lesson viewer
-        this.router.navigate(['/lesson', module.id, lesson.id]);
+        const hash = this.adminService.getTenantHash();
+        if (hash) {
+            this.router.navigate([`/admin/${hash}/lesson`, module.id, lesson.id]);
+        } else {
+            this.router.navigate(['/lesson', module.id, lesson.id]);
+        }
     }
 
     onSupportCancel(): void {

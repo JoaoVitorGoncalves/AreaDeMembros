@@ -441,7 +441,7 @@ export class AddLessonComponent implements OnDestroy {
             reader.readAsDataURL(file);
 
             // Upload image if user is admin
-            if (this.authService.isAdmin()) {
+            if (this.authService.isAdmin() || this.adminService.isAuthenticated()) {
                 this.uploadImage(file);
             }
         }
@@ -479,7 +479,7 @@ export class AddLessonComponent implements OnDestroy {
             reader.readAsDataURL(file);
 
             // Upload image if user is admin
-            if (this.authService.isAdmin()) {
+            if (this.authService.isAdmin() || this.adminService.isAuthenticated()) {
                 this.uploadImage(file);
             }
         }
@@ -540,7 +540,7 @@ export class AddLessonComponent implements OnDestroy {
             this.videoPreviewUrl = URL.createObjectURL(file);
 
             // Upload video if user is admin
-            if (this.authService.isAdmin()) {
+            if (this.authService.isAdmin() || this.adminService.isAuthenticated()) {
                 this.uploadVideo(file);
             }
         }
@@ -584,7 +584,7 @@ export class AddLessonComponent implements OnDestroy {
             this.videoPreviewUrl = URL.createObjectURL(file);
 
             // Upload video if user is admin
-            if (this.authService.isAdmin()) {
+            if (this.authService.isAdmin() || this.adminService.isAuthenticated()) {
                 this.uploadVideo(file);
             }
         }
@@ -667,12 +667,17 @@ export class AddLessonComponent implements OnDestroy {
 
         const formData = this.lessonForm.value;
 
-        // Prepare payload for lesson creation – send raw values, backend constructs the full URL
+        // Prepare payload for lesson creation – send full URL to backend
+        const buildFullUrl = (url: string | null, prefix: string = ''): string | null => {
+            if (!url) return null;
+            if (url.startsWith('http')) return url;
+            return `https://assets.userfounded.workers.dev/${prefix}${url}`;
+        };
         const payload = {
             name: formData.name,
             description: formData.description || null,
-            thumbnail_url: this.uploadedImageUrl || this.imagePreviewUrl || null,
-            video_url: this.uploadedVideoUrl || null,
+            thumbnail_url: buildFullUrl(this.uploadedImageUrl || this.imagePreviewUrl),
+            video_url: buildFullUrl(this.uploadedVideoUrl),
             module_id: this.moduleId || this.lessonForm.get('module_id')?.value
         };
 
@@ -682,10 +687,10 @@ export class AddLessonComponent implements OnDestroy {
                 description: formData.description || null,
             };
             if (this.uploadedImageUrl) {
-                updatePayload.thumbnail_url = this.uploadedImageUrl;
+                updatePayload.thumbnail_url = buildFullUrl(this.uploadedImageUrl);
             }
             if (this.uploadedVideoUrl) {
-                updatePayload.video_url = this.uploadedVideoUrl;
+                updatePayload.video_url = buildFullUrl(this.uploadedVideoUrl);
             }
 
             this.http.put<any>(`${environment.apiUrl}/api/v1/lessons/${this.lesson.id}`, updatePayload, {
@@ -746,8 +751,8 @@ export class AddLessonComponent implements OnDestroy {
                         id: response.data?.id || Date.now(),
                         name: formData.name,
                         description: formData.description,
-                        thumbnail_url: this.uploadedImageUrl ? `https://assets.userfounded.workers.dev/${this.tenantHash}/file/${this.uploadedImageUrl}` : (this.imagePreviewUrl || '/assets/images/default-lesson.jpg'),
-                        video_url: `https://assets.userfounded.workers.dev/${this.tenantHash}/file/${this.uploadedVideoUrl}`,
+                        thumbnail_url: this.uploadedImageUrl ? `https://assets.userfounded.workers.dev/${this.uploadedImageUrl}` : (this.imagePreviewUrl || '/assets/images/default-lesson.jpg'),
+                        video_url: this.uploadedVideoUrl ? `https://assets.userfounded.workers.dev/${this.uploadedVideoUrl}` : '',
                         module_id: this.moduleId
                     };
 

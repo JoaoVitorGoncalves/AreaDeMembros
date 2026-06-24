@@ -174,7 +174,7 @@ export class AddModuleComponent {
             this.moduleForm.patchValue({ cover: file });
 
             // Upload image if user is admin
-            if (this.authService.isAdmin()) {
+            if (this.authService.isAdmin() || this.adminService.isAuthenticated()) {
                 this.uploadImage(file);
             }
         }
@@ -209,7 +209,7 @@ export class AddModuleComponent {
                     this.moduleForm.patchValue({ cover: file });
 
                     // Upload image if user is admin
-                    if (this.authService.isAdmin()) {
+                    if (this.authService.isAdmin() || this.adminService.isAuthenticated()) {
                         this.uploadImage(file);
                     }
                 } else {
@@ -244,9 +244,15 @@ export class AddModuleComponent {
         }
 
         // Prepare payload for module creation
+        let imagePath = '';
+        if (this.uploadedImageUrl) {
+            imagePath = `https://assets.userfounded.workers.dev/module-assets/${this.uploadedImageUrl}`;
+        } else if (this.imagePreviewUrl && !this.imagePreviewUrl.startsWith('data:')) {
+            imagePath = `https://assets.userfounded.workers.dev/module-assets/${this.tenantHash}/file/${this.imagePreviewUrl}`;
+        }
         const payload = {
             name: formData.name,
-            image_path: `https://assets.userfounded.workers.dev/module-assets/${this.tenantHash}/file/${this.uploadedImageUrl}` || `https://assets.userfounded.workers.dev/module-assets/${this.tenantHash}/file/${this.imagePreviewUrl}`,
+            image_path: imagePath,
             role_name: this.cargo?.name || '',
             role_id: this.cargo?.id
         };

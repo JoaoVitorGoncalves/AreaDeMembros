@@ -180,7 +180,11 @@ export class AddToolComponent implements OnInit {
         // Monta o payload incluindo o cargo atual
         let imageUrl = this.toolForm.value.image_url;
         if (imageUrl && !imageUrl.startsWith('http')) {
-            imageUrl = `https://assets.userfounded.workers.dev/tools-assets/${this.tenantHash}/file/${imageUrl}`;
+            if (imageUrl.includes('/file/')) {
+                imageUrl = `https://assets.userfounded.workers.dev/tools-assets/${imageUrl}`;
+            } else {
+                imageUrl = `https://assets.userfounded.workers.dev/tools-assets/${this.tenantHash}/file/${imageUrl}`;
+            }
         }
         const payload = {
             ...this.toolForm.value,

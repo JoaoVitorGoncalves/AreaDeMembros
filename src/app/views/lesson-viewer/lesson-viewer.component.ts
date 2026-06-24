@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LessonService } from '../../services/lesson.service';
+import { AdminService } from '../../services/admin.service';
 import { Module, Lesson } from '../../services/module.service';
 import { HeaderComponent } from '../../layouts/header/header.component';
 import Hls from 'hls.js';
@@ -75,16 +76,31 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
 
     private lastModuleProgress: number = 0;
 
+    // Admin context
+    isAdmin: boolean = false;
+    private adminRoutePrefix: string = '';
+
     isDraggingProgress = false;
     previewTime = 0;
 
     constructor(
         private route: ActivatedRoute,
         private router: Router,
-        private lessonService: LessonService
+        private lessonService: LessonService,
+        private adminService: AdminService
     ) { }
 
     ngOnInit(): void {
+        // Detectar contexto admin
+        this.isAdmin = this.router.url.includes('/admin/') && this.adminService.isAuthenticated();
+        if (this.isAdmin) {
+            const parts = this.router.url.split('/');
+            const idx = parts.indexOf('admin');
+            if (idx !== -1 && parts.length > idx + 1) {
+                this.adminRoutePrefix = `/admin/${parts[idx + 1]}`;
+            }
+        }
+
         // Obter parâmetros da rota
         this.route.params.subscribe(params => {
             this.moduleId = params['moduleId'];
@@ -565,7 +581,8 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
             this.close.emit();
         } else {
             // Se foi chamado via rota, navega de volta
-            this.router.navigate(['/dashboard']);
+            const dest = this.isAdmin ? `${this.adminRoutePrefix}/dashboard` : '/dashboard';
+            this.router.navigate([dest]);
         }
     }
 
@@ -605,10 +622,15 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
             const nextLesson = this.moduleLessons[currentIndex + 1];
 
             if (nextLesson) {
-                this.router.navigate(['/lesson', this.moduleId, nextLesson.id]);
+                if (this.isAdmin) {
+                    this.router.navigate([`${this.adminRoutePrefix}/lesson`, this.moduleId, nextLesson.id]);
+                } else {
+                    this.router.navigate(['/lesson', this.moduleId, nextLesson.id]);
+                }
             } else {
                 // Se não há próxima aula, volta para o dashboard
-                this.router.navigate(['/dashboard']);
+                const dest = this.isAdmin ? `${this.adminRoutePrefix}/dashboard` : '/dashboard';
+                this.router.navigate([dest]);
             }
         }
     }
@@ -634,7 +656,11 @@ export class LessonViewerComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Se foi chamado via rota, atualiza a URL
         if (this.moduleId) {
-            this.router.navigate(['/lesson', this.moduleId, lesson.id]);
+            if (this.isAdmin) {
+                this.router.navigate([`${this.adminRoutePrefix}/lesson`, this.moduleId, lesson.id]);
+            } else {
+                this.router.navigate(['/lesson', this.moduleId, lesson.id]);
+            }
         }
         setTimeout(() => this.refreshAndInitPlayer(), 100);
         setTimeout(() => this.updateTotalProgress(), 100);

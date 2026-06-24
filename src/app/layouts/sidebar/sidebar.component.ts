@@ -117,6 +117,14 @@ export class SidebarComponent implements OnInit {
     this.totalGlobalProgress = count > 0 ? Math.round(sum / count) : 0;
   }
 
+  get adminRoutePrefix(): string {
+    const parts = this.router.url.split('/');
+    if (parts.length >= 3 && parts[1] === 'admin') {
+      return `/admin/${parts[2]}`;
+    }
+    return '';
+  }
+
   logout(): void {
     if (this.router.url.startsWith('/admin/')) {
       const hash = this.adminService.getTenantHash();

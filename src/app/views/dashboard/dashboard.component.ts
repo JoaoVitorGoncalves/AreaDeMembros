@@ -292,7 +292,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   viewCourseModule(module: Module): void {
     if (module.lessons && module.lessons.length > 0) {
-      this.router.navigate(['/lesson', module.id, module.lessons[0].id]);
+      if (this.isAdmin) {
+        const hash = this.adminService.getTenantHash();
+        this.router.navigate([`/admin/${hash}/lesson`, module.id, module.lessons[0].id]);
+      } else {
+        this.router.navigate(['/lesson', module.id, module.lessons[0].id]);
+      }
     }
   }
 
@@ -525,10 +530,20 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       let targetLesson = this.findNextIncompleteLesson(module);
 
       if (targetLesson) {
-        this.router.navigate(['/lesson', module.id, targetLesson.id]);
+        if (this.isAdmin) {
+          const hash = this.adminService.getTenantHash();
+          this.router.navigate([`/admin/${hash}/lesson`, module.id, targetLesson.id]);
+        } else {
+          this.router.navigate(['/lesson', module.id, targetLesson.id]);
+        }
       } else {
         // Se todas as aulas estão concluídas, ir para a primeira
-        this.router.navigate(['/lesson', module.id, module.lessons[0].id]);
+        if (this.isAdmin) {
+          const hash = this.adminService.getTenantHash();
+          this.router.navigate([`/admin/${hash}/lesson`, module.id, module.lessons[0].id]);
+        } else {
+          this.router.navigate(['/lesson', module.id, module.lessons[0].id]);
+        }
       }
     } else {
       // Se não há aulas no módulo, tentar recarregar os módulos
@@ -573,7 +588,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   continuarAula(module: Module, lesson: Lesson) {
-    this.router.navigate(['/lesson', module.id, lesson.id]);
+    if (this.isAdmin) {
+      const hash = this.adminService.getTenantHash();
+      this.router.navigate([`/admin/${hash}/lesson`, module.id, lesson.id]);
+    } else {
+      this.router.navigate(['/lesson', module.id, lesson.id]);
+    }
   }
 
   private updateLessonsInProgress(shouldFetchBackend: boolean = false): void {

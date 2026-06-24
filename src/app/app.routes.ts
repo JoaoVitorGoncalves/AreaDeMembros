@@ -86,6 +86,31 @@ export const routes: Routes = [
                         path: 'dashboard',
                         loadComponent: () => import('./views/dashboard/dashboard.component').then(c => c.DashboardComponent),
                         canActivate: [AdminTenantGuard]
+                    },
+                    {
+                        path: 'analytics',
+                        loadComponent: () => import('./views/analytics/analytics.component').then(c => c.AnalyticsComponent),
+                        canActivate: [AdminTenantGuard]
+                    },
+                    {
+                        path: 'collaborators',
+                        loadComponent: () => import('./views/collaborators/collaborators.component').then(c => c.CollaboratorsComponent),
+                        canActivate: [AdminTenantGuard]
+                    },
+                    {
+                        path: 'integrations',
+                        loadComponent: () => import('./views/integrations/integrations.component').then(c => c.IntegrationsComponent),
+                        canActivate: [AdminTenantGuard]
+                    },
+                    {
+                        path: 'settings',
+                        loadComponent: () => import('./views/settings/settings.component').then(c => c.SettingsComponent),
+                        canActivate: [AdminTenantGuard]
+                    },
+                    {
+                        path: 'lesson/:moduleId/:lessonId',
+                        loadComponent: () => import('./views/lesson-viewer/lesson-viewer.component').then(c => c.LessonViewerComponent),
+                        canActivate: [AdminTenantGuard]
                     }
                 ]
             }
