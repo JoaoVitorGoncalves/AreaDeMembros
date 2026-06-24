@@ -651,7 +651,7 @@ export class AddLessonComponent implements OnDestroy {
         this.successMessage = null;
         this.cdr.markForCheck();
 
-        const token = this.authService.getToken();
+        const token = this.authService.getToken() || this.adminService.getToken();
 
         if (!token) {
             this.error = 'Token de autenticação não encontrado.';

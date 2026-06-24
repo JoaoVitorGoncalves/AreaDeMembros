@@ -234,7 +234,7 @@ export class AddModuleComponent {
         this.cdr.markForCheck();
 
         const formData = this.moduleForm.value;
-        const token = this.authService.getToken();
+        const token = this.authService.getToken() || this.adminService.getToken();
 
         if (!token) {
             this.error = 'Token de autenticação não encontrado.';

@@ -408,7 +408,7 @@ export class AddToolComponent implements OnInit {
         const imageName = this.extractImageNameFromUrl(this.uploadedImageUrl);
         if (!imageName) return;
 
-        const token = this.authService.getToken();
+        const token = this.authService.getToken() || this.adminService.getToken();
         if (!token) {
             console.error('Token não encontrado para deletar imagem');
             return;
