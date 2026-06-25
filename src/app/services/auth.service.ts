@@ -18,6 +18,7 @@ interface RegisterRequest {
     document: string;
     password: string;
     invite_token: string;
+    admin_hash?: string;
 }
 
 export interface User {

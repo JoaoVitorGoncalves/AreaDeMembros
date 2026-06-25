@@ -1537,7 +1537,8 @@ export class AdminCargoDetailComponent
 
     // Métodos para controlar a edição de configurações
     copyInviteLink(): void {
-        const url = `https://grupomillion.com/invite/${this.cargo?.invite_token || ''}`;
+        const hash = this.adminService.getTenantHash();
+        const url = `https://grupomillion.com/invite/${this.cargo?.invite_token || ''}${hash ? `?admin=${hash}` : ''}`;
         navigator.clipboard.writeText(url).catch(() => {
             const input = document.createElement('input');
             input.value = url;

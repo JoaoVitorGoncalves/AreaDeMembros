@@ -99,6 +99,8 @@ export class InviteComponent implements OnDestroy {
             return;
         }
 
+        const adminHash = this.route.snapshot.queryParamMap.get('admin');
+
         this.authService.register({
             name: this.registerData.name,
             email: this.registerData.email,
@@ -106,6 +108,7 @@ export class InviteComponent implements OnDestroy {
             document: this.registerData.document.replace(/\D/g, ''),
             password: this.registerData.password,
             invite_token: token,
+            admin_hash: adminHash || undefined,
         }).pipe(takeUntil(this.destroy$)).subscribe({
             next: () => {
                 this.router.navigate(['/dashboard']);
