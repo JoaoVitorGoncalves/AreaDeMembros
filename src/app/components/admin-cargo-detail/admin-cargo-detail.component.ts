@@ -65,6 +65,8 @@ export class AdminCargoDetailComponent
     @Output() cargoUpdated = new EventEmitter<Role>();
 
     activeTab: string = 'conteudo';
+    isRecruiterView: boolean = false;
+    isEditorView: boolean = false;
     showAddUserSidebarFlag: boolean = false;
     showAddToolSidebarFlag: boolean = false;
     showAddModuleModalFlag: boolean = false;
@@ -595,7 +597,13 @@ export class AdminCargoDetailComponent
     }
 
     ngOnInit(): void {
-        // Limpar apenas campos locais na inicialização (não o cache)
+        this.isRecruiterView = this.adminService.isCollaborator() && this.adminService.getCollaboratorType() === 'recruiter';
+        this.isEditorView = this.adminService.isCollaborator() && this.adminService.getCollaboratorType() === 'editor';
+
+        if (this.isRecruiterView) {
+            this.activeTab = 'usuarios';
+        }
+
         this.clearLocalSupportData();
 
         // Garantir que os módulos não sejam expandidos automaticamente na inicialização

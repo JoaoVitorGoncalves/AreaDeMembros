@@ -13,8 +13,12 @@ export class AuthInterceptor implements HttpInterceptor {
     ) { }
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        // Não adicionar token para requisições de login (regular ou admin)
-        if (req.url.includes('/auth/login') || req.url.includes('/admin/login')) {
+        // Não adicionar token para requisições de login e accept-invite
+        if (req.url.includes('/auth/login')
+            || req.url.includes('/admin/login')
+            || req.url.includes('/admin/register')
+            || req.url.includes('/collaborator/login')
+            || req.url.includes('/collaborator/accept-invite')) {
             return next.handle(req);
         }
 

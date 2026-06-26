@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { CollaboratorAuthService } from './collaborator-auth.service';
 
 export interface AdminUser {
     id: number;
@@ -57,18 +58,25 @@ export class AdminService {
     private currentAdminSubject = new BehaviorSubject<AdminUser | null>(this.getAdmin());
     public currentAdmin$ = this.currentAdminSubject.asObservable();
 
-    constructor(private http: HttpClient) { }
+    constructor(
+        private http: HttpClient,
+        private collaboratorAuth: CollaboratorAuthService
+    ) { }
 
     private hasToken(): boolean {
-        return localStorage.getItem('admin_access_token') !== null;
+        return localStorage.getItem('admin_access_token') !== null
+            || localStorage.getItem('collaborator_token') !== null;
     }
 
     getToken(): string | null {
-        return localStorage.getItem('admin_access_token');
+        return localStorage.getItem('admin_access_token')
+            || localStorage.getItem('collaborator_token');
     }
 
     getTokenType(): string | null {
-        return localStorage.getItem('admin_token_type');
+        return localStorage.getItem('admin_token_type')
+            || localStorage.getItem('collaborator_token_type')
+            || 'Bearer';
     }
 
     getFullAuthToken(): string | null {
@@ -78,7 +86,16 @@ export class AdminService {
     }
 
     getTenantHash(): string | null {
-        return localStorage.getItem('admin_tenant_hash');
+        const adminHash = localStorage.getItem('admin_tenant_hash');
+        if (adminHash) return adminHash;
+        const user = localStorage.getItem('collaborator_user');
+        if (user) {
+            try {
+                const parsed = JSON.parse(user);
+                return parsed.tenant_hash || null;
+            } catch { }
+        }
+        return null;
     }
 
     getAdmin(): AdminUser | null {
@@ -93,6 +110,21 @@ export class AdminService {
     isSuperAdmin(): boolean {
         const admin = this.getAdmin();
         return admin?.is_super_admin === true;
+    }
+
+    isCollaborator(): boolean {
+        return localStorage.getItem('collaborator_token') !== null;
+    }
+
+    getCollaboratorType(): 'recruiter' | 'editor' | null {
+        const user = localStorage.getItem('collaborator_user');
+        if (user) {
+            try {
+                const parsed = JSON.parse(user);
+                return parsed.type || null;
+            } catch { }
+        }
+        return null;
     }
 
     login(email: string, password: string): Observable<AdminLoginResponse> {
@@ -141,10 +173,14 @@ export class AdminService {
     }
 
     logout(): void {
-        this.http.post(`${this.API_URL}/logout`, {}).subscribe({
-            error: () => { }
-        });
-        this.clearSession();
+        if (this.isCollaborator()) {
+            this.collaboratorAuth.logout();
+        } else {
+            this.http.post(`${this.API_URL}/logout`, {}).subscribe({
+                error: () => { }
+            });
+            this.clearSession();
+        }
     }
 
     clearSession(): void {
@@ -153,6 +189,9 @@ export class AdminService {
         localStorage.removeItem('admin_expires_in');
         localStorage.removeItem('admin_user');
         localStorage.removeItem('admin_tenant_hash');
+        localStorage.removeItem('collaborator_token');
+        localStorage.removeItem('collaborator_token_type');
+        localStorage.removeItem('collaborator_user');
         this.isLoggedInSubject.next(false);
         this.currentAdminSubject.next(null);
     }

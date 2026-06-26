@@ -273,6 +273,68 @@
     }
 }
 
+.type-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+
+    &.type-recruiter {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+    }
+
+    &.type-editor {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+    }
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+
+    &.status-active {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+    }
+
+    &.status-inactive {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+    }
+}
+
+.invite-pending {
+    color: #fbbf24;
+    font-size: 13px;
+}
+
+.invite-done {
+    color: #4ade80;
+    font-size: 13px;
+}
+
+.menu-btn {
+    background: none;
+    border: 1px solid #3F3F46;
+    border-radius: 6px;
+    color: #A1A1AA;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 14px;
+    margin-left: 4px;
+
+    &:hover {
+        background: #27272A;
+        color: #FAFAFA;
+    }
+}
+
 @keyframes spin {
     0% {
         transform: rotate(0deg);

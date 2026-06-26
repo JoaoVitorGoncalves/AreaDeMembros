@@ -10,6 +10,7 @@ import { Module } from '../../services/module.service';
 import { RolesService } from '../../services/roles.service';
 import { Role } from '../../models/role.model';
 import { CollaboratorsService, Collaborator } from '../../services/collaborators.service';
+import { CollaboratorAuthService } from '../../services/collaborator-auth.service';
 import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
@@ -21,6 +22,8 @@ import { ChangeDetectorRef } from '@angular/core';
 })
 export class SidebarComponent implements OnInit {
   isAdmin: boolean = false;
+  isCollaborator: boolean = false;
+  collaboratorType: string | null = null;
   modules: Module[] = [];
   totalGlobalProgress: number = 0;
   roles: Role[] = [];
@@ -30,6 +33,7 @@ export class SidebarComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private adminService: AdminService,
+    private collaboratorAuth: CollaboratorAuthService,
     private moduleService: ModuleService,
     private lessonService: LessonService,
     private rolesService: RolesService,
@@ -42,11 +46,13 @@ export class SidebarComponent implements OnInit {
     this.isAdmin = this.router.url.startsWith('/admin/')
       ? this.adminService.isAuthenticated()
       : this.authService.isAdmin();
+    this.isCollaborator = this.adminService.isCollaborator();
+    this.collaboratorType = this.adminService.getCollaboratorType();
     this.moduleService.modules$.subscribe(modules => {
       this.modules = modules;
       this.updateTotalGlobalProgress();
     });
-    if (this.isAdmin) {
+    if (this.isAdmin && !this.isCollaborator) {
       // Assina roles$ para atualização reativa
       this.rolesService.roles$.subscribe(result => {
         this.roles = result.roles;

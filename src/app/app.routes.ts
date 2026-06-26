@@ -67,6 +67,20 @@ export const routes: Routes = [
         loadComponent: () => import('./views/super-admin/super-admin.component').then(c => c.SuperAdminComponent),
         canActivate: [SuperAdminGuard]
     },
+    // ─── Collaborator routes ───
+    {
+        path: 'collaborator',
+        children: [
+            {
+                path: 'login',
+                loadComponent: () => import('./views/collaborator-login/collaborator-login.component').then(c => c.CollaboratorLoginComponent)
+            },
+            {
+                path: 'invite/:token',
+                loadComponent: () => import('./views/collaborator-invite/collaborator-invite.component').then(c => c.CollaboratorInviteComponent)
+            }
+        ]
+    },
     // ─── Admin routes ───
     {
         path: 'admin',

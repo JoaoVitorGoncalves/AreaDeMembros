@@ -6,22 +6,21 @@
         <div class="collaborators-content">
             <div class="header">
                 <h1>Colaboradores</h1>
-                <p>Gerencie os administradores colaboradores do projeto</p>
+                <p>Gerencie os colaboradores do projeto</p>
             </div>
 
             <div class="actions">
                 <div class="search-filter">
-                    <input type="text" placeholder="Buscar por nome ou email">
-                    <select>
-                        <option>Todos os colaboradores</option>
-                        <option>Administradores</option>
-                        <option>Editores</option>
+                    <input type="text" placeholder="Buscar por nome ou email" [(ngModel)]="searchTerm"
+                        (input)="applyFilters()">
+                    <select [(ngModel)]="filterType" (change)="applyFilters()">
+                        <option value="">Todos os tipos</option>
+                        <option value="recruiter">Recrutadores</option>
+                        <option value="editor">Editores</option>
                     </select>
-                    <button class="filter-btn">Filtrar</button>
                 </div>
                 <button class="add-collaborator-btn" *ngIf="isAdmin" (click)="openAddSidebar()">+ Adicionar
                     Colaborador</button>
-                <!-- <button class="refresh-btn" *ngIf="isAdmin" (click)="refreshCollaborators()">Recarregar</button> -->
             </div>
 
             <!-- Error State -->
@@ -45,15 +44,14 @@
                         <thead>
                             <tr>
                                 <th>Nome e Email</th>
-                                <!-- <th>Último acesso</th>
-                            <th>Função</th>
-                            <th>Status</th>
-                            <th>Permissões</th> -->
+                                <th>Tipo</th>
+                                <th>Status</th>
+                                <th>Convite</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let collaborator of collaborators; trackBy: trackByCollaborator">
+                            <tr *ngFor="let collaborator of filteredCollaborators; trackBy: trackByCollaborator">
                                 <td>
                                     <div class="user-info">
                                         <div class="avatar">{{ collaborator.name | slice:0:1 }}</div>
@@ -63,27 +61,39 @@
                                         </div>
                                     </div>
                                 </td>
-                                <!-- <td>{{ collaborator.last_access | date:'dd/MM/yyyy HH:mm' }}</td>
-                            <td>
-                                <span class="role-badge" [class]="'role-' + collaborator.role.toLowerCase()">
-                                    {{ collaborator.role }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="status-badge" [class]="'status-' + collaborator.status.toLowerCase()">
-                                    {{ collaborator.status }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="permissions">
-                                    <span *ngFor="let permission of collaborator.permissions" class="permission-tag">
-                                        {{ permission }}
+                                <td>
+                                    <span class="type-badge"
+                                        [class.type-recruiter]="collaborator.type === 'recruiter'"
+                                        [class.type-editor]="collaborator.type === 'editor'">
+                                        {{ collaborator.type === 'recruiter' ? 'Recrutador' : 'Editor' }}
                                     </span>
-                                </div>
-                            </td> -->
+                                </td>
+                                <td>
+                                    <span class="status-badge"
+                                        [class.status-active]="collaborator.status === 'active'"
+                                        [class.status-inactive]="collaborator.status === 'inactive'">
+                                        {{ collaborator.status === 'active' ? 'Ativo' : 'Inativo' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span *ngIf="collaborator.has_invite" class="invite-pending">Pendente</span>
+                                    <span *ngIf="!collaborator.has_invite && collaborator.has_password"
+                                        class="invite-done">Completo</span>
+                                </td>
                                 <td>
                                     <div class="actions-menu">
-                                        <button class="menu-btn">...</button>
+                                        <button class="menu-btn"
+                                            *ngIf="collaborator.has_invite && isAdmin"
+                                            (click)="copyInviteUrl(collaborator)"
+                                            title="Copiar link de convite">
+                                            🔗
+                                        </button>
+                                        <button class="menu-btn"
+                                            *ngIf="isAdmin"
+                                            (click)="confirmDelete(collaborator)"
+                                            title="Excluir">
+                                            🗑️
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -91,7 +101,7 @@
                     </table>
 
                     <!-- Empty State -->
-                    <div *ngIf="collaborators.length === 0 && !error" class="empty-state">
+                    <div *ngIf="filteredCollaborators.length === 0 && !error" class="empty-state">
                         <p>Nenhum colaborador encontrado</p>
                         <button *ngIf="isAdmin" (click)="openAddSidebar()" class="add-first-btn">
                             Adicionar Primeiro Colaborador

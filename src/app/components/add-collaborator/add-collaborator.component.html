@@ -24,26 +24,6 @@
             </div>
 
             <div class="form-field">
-                <label for="document">Documento</label>
-                <input id="document" type="text" formControlName="document" placeholder="CPF ou CNPJ"
-                    (input)="onInputChange()">
-                <div *ngIf="collaboratorForm.get('document')?.invalid && collaboratorForm.get('document')?.touched"
-                    class="field-error">
-                    Documento é obrigatório
-                </div>
-            </div>
-
-            <div class="form-field">
-                <label for="phone">Telefone</label>
-                <input id="phone" type="tel" formControlName="phone" placeholder="(11) 99999-9999"
-                    (input)="onInputChange()">
-                <div *ngIf="collaboratorForm.get('phone')?.invalid && collaboratorForm.get('phone')?.touched"
-                    class="field-error">
-                    Telefone é obrigatório
-                </div>
-            </div>
-
-            <div class="form-field">
                 <label for="email">Email</label>
                 <input id="email" type="email" formControlName="email" placeholder="Email do colaborador"
                     (input)="onInputChange()">
@@ -55,21 +35,73 @@
             </div>
 
             <div class="form-field">
+                <label>Tipo</label>
+                <div class="type-selector">
+                    <button type="button" class="type-option"
+                        [class.selected]="collaboratorForm.get('type')?.value === 'recruiter'"
+                        (click)="collaboratorForm.patchValue({type: 'recruiter'}); onInputChange()">
+                        <strong>Recrutador</strong>
+                        <small>Pode cadastrar usuários nos cursos</small>
+                    </button>
+                    <button type="button" class="type-option"
+                        [class.selected]="collaboratorForm.get('type')?.value === 'editor'"
+                        (click)="collaboratorForm.patchValue({type: 'editor'}); onInputChange()">
+                        <strong>Editor</strong>
+                        <small>Pode criar e editar conteúdos</small>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label>Modo de criação</label>
+                <div class="mode-selector">
+                    <label class="mode-radio">
+                        <input type="radio" formControlName="creationMode" value="invite">
+                        <span>Link de convite</span>
+                        <small>Colaborador define a própria senha</small>
+                    </label>
+                    <label class="mode-radio">
+                        <input type="radio" formControlName="creationMode" value="direct">
+                        <span>Criar diretamente</span>
+                        <small>Você define a senha agora</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-field" *ngIf="!isInviteMode">
                 <label for="password">Senha</label>
                 <input id="password" type="password" formControlName="password" placeholder="Senha do colaborador"
                     (input)="onInputChange()">
-                <small>Mínimo de 6 caracteres</small>
+                <small>Mínimo de 8 caracteres</small>
                 <div *ngIf="collaboratorForm.get('password')?.invalid && collaboratorForm.get('password')?.touched"
                     class="field-error">
-                    <span *ngIf="collaboratorForm.get('password')?.errors?.['required']">Senha é obrigatória</span>
-                    <span *ngIf="collaboratorForm.get('password')?.errors?.['minlength']">Senha deve ter pelo menos 6
+                    <span *ngIf="collaboratorForm.get('password')?.errors?.['minlength']">Senha deve ter pelo menos 8
                         caracteres</span>
+                </div>
+            </div>
+
+            <div class="form-field" *ngIf="isRecruiterSelected && roles.length > 0">
+                <label>Cursos que o recrutador pode gerenciar</label>
+                <div class="roles-list">
+                    <label class="role-checkbox" *ngFor="let role of roles">
+                        <input type="checkbox" [checked]="selectedRoleIds.includes(role.id)"
+                            (change)="toggleRole(role.id)">
+                        <span>{{ role.name }}</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-field" *ngIf="inviteUrl">
+                <label>Link de convite</label>
+                <div class="invite-url-box">
+                    <input type="text" [value]="inviteUrl" readonly>
+                    <button type="button" class="btn-copy" (click)="copyInviteUrl()">Copiar</button>
                 </div>
             </div>
 
             <div class="form-actions">
                 <div *ngIf="error" class="error-message">{{ error }}</div>
-                <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+                <div *ngIf="successMessage && !inviteUrl" class="success-message">{{ successMessage }}</div>
                 <button type="submit" class="btn-submit" [disabled]="isLoading || collaboratorForm.invalid">
                     <span *ngIf="!isLoading">Salvar Colaborador</span>
                     <span *ngIf="isLoading" class="spinner"></span>
