@@ -90,7 +90,7 @@ export class SidebarComponent implements OnInit {
 
   // NOVO: Apenas colaboradores que são admin
   get collaboratorsAdminsCount(): number {
-    return this.collaborators.filter((c: any) => c.roles[0].name === 'Adm').length;
+    return this.collaborators.filter((c: any) => c.roles?.[0]?.name === 'Adm').length;
   }
 
   get collaboratorsAdminsProgressPercent(): number {

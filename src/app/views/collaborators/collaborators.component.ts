@@ -128,7 +128,6 @@ export class CollaboratorsComponent implements OnInit, OnDestroy {
             next: (result) => {
                 if (result.invite_url) {
                     navigator.clipboard.writeText(result.invite_url);
-                    this.refreshCollaborators();
                 }
             }
         });

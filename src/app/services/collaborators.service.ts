@@ -63,8 +63,25 @@ export class CollaboratorsService {
         }
 
         return this.http.post<any>(this.API_URL, payload).pipe(
-            tap(() => this.clearCache()),
             map(response => response.data || response),
+            tap(newCollaborator => {
+                // Append to cache instead of clearing, so the list updates immediately
+                const current = this.collaboratorsSubject.getValue();
+                if (current) {
+                    this.collaboratorsSubject.next({
+                        ...current,
+                        collaborators: [...current.collaborators, newCollaborator],
+                        totalCollaborators: current.totalCollaborators + 1,
+                    });
+                } else {
+                    this.collaboratorsSubject.next({
+                        collaborators: [newCollaborator],
+                        totalCollaborators: 1,
+                        current_page: 1,
+                        total_pages: 1,
+                    });
+                }
+            }),
             catchError(error => this.handleError(error, 'Erro ao criar colaborador')),
             finalize(() => this.loadingSubject.next(false))
         );
