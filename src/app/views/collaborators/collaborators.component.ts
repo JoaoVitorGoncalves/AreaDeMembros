@@ -8,11 +8,12 @@ import { SidebarComponent } from '../../layouts/sidebar/sidebar.component';
 import { CollaboratorsService, Collaborator } from '../../services/collaborators.service';
 import { AdminService } from '../../services/admin.service';
 import { AddCollaboratorComponent } from '../../components/add-collaborator/add-collaborator.component';
+import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal.component';
 
 @Component({
     selector: 'app-collaborators',
     standalone: true,
-    imports: [CommonModule, FormsModule, HeaderComponent, SidebarComponent, AddCollaboratorComponent],
+    imports: [CommonModule, FormsModule, HeaderComponent, SidebarComponent, AddCollaboratorComponent, ConfirmModalComponent],
     templateUrl: './collaborators.component.html',
     styleUrls: ['./collaborators.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,6 +31,11 @@ export class CollaboratorsComponent implements OnInit, OnDestroy {
 
     searchTerm: string = '';
     filterType: string = '';
+
+    openDropdownId: number | null = null;
+    showDeleteModal = false;
+    deleteMessage = '';
+    private collaboratorToDelete: Collaborator | null = null;
 
     constructor(
         private collaboratorsService: CollaboratorsService,
@@ -73,6 +79,11 @@ export class CollaboratorsComponent implements OnInit, OnDestroy {
             .subscribe();
     }
 
+    toggleActionsDropdown(id: number): void {
+        this.openDropdownId = this.openDropdownId === id ? null : id;
+        this.cdr.markForCheck();
+    }
+
     applyFilters(): void {
         let list = [...this.collaborators];
         if (this.searchTerm) {
@@ -112,6 +123,7 @@ export class CollaboratorsComponent implements OnInit, OnDestroy {
     }
 
     copyInviteUrl(collaborator: Collaborator): void {
+        this.openDropdownId = null;
         this.collaboratorsService.updateCollaborator(collaborator.id, { regenerate_invite: true }).subscribe({
             next: (result) => {
                 if (result.invite_url) {
@@ -123,14 +135,31 @@ export class CollaboratorsComponent implements OnInit, OnDestroy {
     }
 
     confirmDelete(collaborator: Collaborator): void {
-        if (confirm(`Excluir colaborador "${collaborator.name}"?`)) {
-            this.collaboratorsService.deleteCollaborator(collaborator.id).subscribe({
-                next: () => this.refreshCollaborators(),
-                error: (err) => {
-                    this.error = err.message;
-                    this.cdr.markForCheck();
-                }
-            });
-        }
+        this.openDropdownId = null;
+        this.collaboratorToDelete = collaborator;
+        this.deleteMessage = `Tem certeza que deseja excluir "${collaborator.name}"?`;
+        this.showDeleteModal = true;
+        this.cdr.markForCheck();
+    }
+
+    onDeleteConfirm(): void {
+        if (!this.collaboratorToDelete) return;
+        this.showDeleteModal = false;
+        this.collaboratorsService.deleteCollaborator(this.collaboratorToDelete.id).subscribe({
+            next: () => {
+                this.collaboratorToDelete = null;
+                this.refreshCollaborators();
+            },
+            error: (err) => {
+                this.error = err.message;
+                this.collaboratorToDelete = null;
+                this.cdr.markForCheck();
+            }
+        });
+    }
+
+    onDeleteCancel(): void {
+        this.showDeleteModal = false;
+        this.collaboratorToDelete = null;
     }
 }

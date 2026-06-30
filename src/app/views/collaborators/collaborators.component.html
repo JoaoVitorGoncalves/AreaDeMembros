@@ -11,25 +11,32 @@
 
             <div class="actions">
                 <div class="search-filter">
-                    <input type="text" placeholder="Buscar por nome ou email" [(ngModel)]="searchTerm"
-                        (input)="applyFilters()">
+                    <div class="search-box">
+                        <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M14 14L11.1 11.1M12.6667 7.33333C12.6667 10.2789 10.2789 12.6667 7.33333 12.6667C4.38781 12.6667 2 10.2789 2 7.33333C2 4.38781 4.38781 2 7.33333 2C10.2789 2 12.6667 4.38781 12.6667 7.33333Z" stroke="#A1A1AA" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <input type="text" placeholder="Buscar por nome ou email" [(ngModel)]="searchTerm"
+                            (input)="applyFilters()">
+                    </div>
                     <select [(ngModel)]="filterType" (change)="applyFilters()">
                         <option value="">Todos os tipos</option>
                         <option value="recruiter">Recrutadores</option>
                         <option value="editor">Editores</option>
                     </select>
                 </div>
-                <button class="add-collaborator-btn" *ngIf="isAdmin" (click)="openAddSidebar()">+ Adicionar
-                    Colaborador</button>
+                <button class="add-collaborator-btn" *ngIf="isAdmin" (click)="openAddSidebar()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Adicionar Colaborador
+                </button>
             </div>
 
-            <!-- Error State -->
             <div *ngIf="error" class="error-state">
                 <p>{{ error }}</p>
                 <button (click)="retryLoad()" class="retry-btn">Tentar Novamente</button>
             </div>
 
-            <!-- Loading State -->
             <ng-container *ngIf="loading$ | async; else collaboratorsTable">
                 <div class="loading-state">
                     <div class="spinner"></div>
@@ -37,74 +44,87 @@
                 </div>
             </ng-container>
 
-            <!-- Collaborators Table -->
             <ng-template #collaboratorsTable>
                 <div class="collaborators-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nome e Email</th>
-                                <th>Tipo</th>
-                                <th>Status</th>
-                                <th>Convite</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let collaborator of filteredCollaborators; trackBy: trackByCollaborator">
-                                <td>
-                                    <div class="user-info">
-                                        <div class="avatar">{{ collaborator.name | slice:0:1 }}</div>
-                                        <div class="name-email">
-                                            <div class="name">{{ collaborator.name }}</div>
-                                            <div class="email">{{ collaborator.email }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="type-badge"
-                                        [class.type-recruiter]="collaborator.type === 'recruiter'"
-                                        [class.type-editor]="collaborator.type === 'editor'">
-                                        {{ collaborator.type === 'recruiter' ? 'Recrutador' : 'Editor' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="status-badge"
-                                        [class.status-active]="collaborator.status === 'active'"
-                                        [class.status-inactive]="collaborator.status === 'inactive'">
-                                        {{ collaborator.status === 'active' ? 'Ativo' : 'Inativo' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span *ngIf="collaborator.has_invite" class="invite-pending">Pendente</span>
-                                    <span *ngIf="!collaborator.has_invite && collaborator.has_password"
-                                        class="invite-done">Completo</span>
-                                </td>
-                                <td>
-                                    <div class="actions-menu">
-                                        <button class="menu-btn"
-                                            *ngIf="collaborator.has_invite && isAdmin"
-                                            (click)="copyInviteUrl(collaborator)"
-                                            title="Copiar link de convite">
-                                            🔗
-                                        </button>
-                                        <button class="menu-btn"
-                                            *ngIf="isAdmin"
-                                            (click)="confirmDelete(collaborator)"
-                                            title="Excluir">
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-header">
+                        <div class="table-col table-col-name">Nome e Email</div>
+                        <div class="table-col table-col-type">Tipo</div>
+                        <div class="table-col table-col-status">Status</div>
+                        <div class="table-col table-col-invite">Convite</div>
+                        <div class="table-col table-col-actions"></div>
+                    </div>
 
-                    <!-- Empty State -->
+                    <div *ngFor="let collaborator of filteredCollaborators; trackBy: trackByCollaborator"
+                        class="table-row" [class.row-pending]="collaborator.has_invite">
+                        <div class="table-col table-col-name">
+                            <div class="user-info">
+                                <span class="avatar">{{ collaborator.name | slice:0:1 }}</span>
+                                <div class="name-email">
+                                    <div class="name">{{ collaborator.name }}</div>
+                                    <div class="email">{{ collaborator.email }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-col table-col-type">
+                            <span class="type-badge"
+                                [class.type-recruiter]="collaborator.type === 'recruiter'"
+                                [class.type-editor]="collaborator.type === 'editor'">
+                                {{ collaborator.type === 'recruiter' ? 'Recrutador' : 'Editor' }}
+                            </span>
+                        </div>
+                        <div class="table-col table-col-status">
+                            <span class="status-badge"
+                                [class.active]="collaborator.status === 'active'"
+                                [class.inactive]="collaborator.status === 'inactive'">
+                                {{ collaborator.status === 'active' ? 'Ativo' : 'Inativo' }}
+                            </span>
+                        </div>
+                        <div class="table-col table-col-invite">
+                            <span *ngIf="collaborator.has_invite" class="invite-pending">Pendente</span>
+                            <span *ngIf="!collaborator.has_invite && collaborator.has_password" class="invite-done">Completo</span>
+                        </div>
+                        <div class="table-col table-col-actions" style="position: relative">
+                            <span class="table-actions-btn" *ngIf="isAdmin"
+                                (click)="toggleActionsDropdown(collaborator.id)"
+                                title="Ações">⋮</span>
+                            <div *ngIf="openDropdownId === collaborator.id"
+                                class="dropdown-menu"
+                                (click)="$event.stopPropagation()">
+                                <div class="dropdown-menu-item"
+                                    *ngIf="collaborator.has_invite"
+                                    (click)="copyInviteUrl(collaborator)">
+                                    <span class="dropdown-menu-item-icon">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <path d="M6 10L10 6M9 11.5L7.5 13C6.5 14 4.5 14 3.5 13C2.5 12 2.5 10 3.5 9L5 7.5M7 4.5L8.5 3C9.5 2 11.5 2 12.5 3C13.5 4 13.5 6 12.5 7L11 8.5" stroke="#A1A1AA" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    Copiar link de convite
+                                </div>
+                                <div class="dropdown-menu-item dropdown-menu-item-danger"
+                                    (click)="confirmDelete(collaborator)">
+                                    <span class="dropdown-menu-item-icon">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <path d="M2 4H14M6 7V11M10 7V11M3 4V14C3 14.5523 3.44772 15 4 15H12C12.5523 15 13 14.5523 13 14V4" stroke="#FF4D4F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    Excluir
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div *ngIf="filteredCollaborators.length === 0 && !error" class="empty-state">
-                        <p>Nenhum colaborador encontrado</p>
-                        <button *ngIf="isAdmin" (click)="openAddSidebar()" class="add-first-btn">
-                            Adicionar Primeiro Colaborador
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                            <rect x="6" y="10" width="36" height="28" rx="4" stroke="#3F3F46" stroke-width="2" fill="none"/>
+                            <line x1="16" y1="20" x2="32" y2="20" stroke="#3F3F46" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="16" y1="26" x2="28" y2="26" stroke="#3F3F46" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="16" y1="32" x2="24" y2="32" stroke="#3F3F46" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <p class="empty-title">Nenhum colaborador encontrado</p>
+                        <p class="empty-desc" *ngIf="searchTerm || filterType">Tente ajustar sua busca ou filtro</p>
+                        <p class="empty-desc" *ngIf="!searchTerm && !filterType">Adicione colaboradores para gerenciar seu time</p>
+                        <button *ngIf="isAdmin && !searchTerm && !filterType" (click)="openAddSidebar()" class="add-first-btn">
+                            Adicionar Colaborador
                         </button>
                     </div>
                 </div>
@@ -115,4 +135,9 @@
     <app-add-collaborator *ngIf="showAddSidebar" (close)="closeAddSidebar()"
         (collaboratorCreated)="onCollaboratorCreated($event)">
     </app-add-collaborator>
+
+    <app-confirm-modal *ngIf="showDeleteModal" title="Excluir Colaborador"
+        [message]="deleteMessage" confirmLabel="Excluir" [icon]="'delete'"
+        (confirm)="onDeleteConfirm()" (cancel)="onDeleteCancel()">
+    </app-confirm-modal>
 </main>
