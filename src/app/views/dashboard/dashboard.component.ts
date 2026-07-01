@@ -13,6 +13,8 @@ import { map } from 'rxjs/operators';
 import { Router, ActivatedRoute } from '@angular/router';
 import { LessonService } from '../../services/lesson.service';
 import { AdminService } from '../../services/admin.service';
+import { CollaboratorAuthService } from '../../services/collaborator-auth.service';
+import { CollaboratorsService } from '../../services/collaborators.service';
 
 interface CourseModules {
   roleName: string;
@@ -74,6 +76,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private adminService: AdminService,
+    private collaboratorAuth: CollaboratorAuthService,
+    private collaboratorsService: CollaboratorsService,
     private moduleService: ModuleService,
     private rolesService: RolesService,
     private cdr: ChangeDetectorRef,
@@ -100,10 +104,51 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       : this.authService.isAdmin();
 
     if (this.isAdmin) {
-      this.rolesService.getRoles().subscribe(roles => {
-        this.rolesSubject.next(roles);
-        this.cdr.detectChanges();
-      });
+      if (this.adminService.isCollaborator()) {
+        const collaborator = this.collaboratorAuth.getUser();
+        if (collaborator) {
+          this.rolesService.clearCache();
+          const collaboratorType = this.adminService.getCollaboratorType();
+          // Editors have access to ALL courses; recruiters only see assigned courses
+          if (collaboratorType === 'editor') {
+            this.rolesService.getRoles().subscribe({
+              next: (roles) => {
+                this.rolesSubject.next(roles);
+                this.cdr.detectChanges();
+              },
+              error: () => {
+                this.rolesSubject.next({ roles: [], totalRoles: 0 });
+                this.cdr.detectChanges();
+              }
+            });
+          } else {
+            this.collaboratorsService.getAssignedRoles(collaborator.id).subscribe({
+              next: (roles: any[]) => {
+                const result: RolesResult = { roles, totalRoles: roles.length };
+                this.rolesSubject.next(result);
+                this.cdr.detectChanges();
+              },
+              error: () => {
+                this.collaboratorCoursesFallback(collaborator);
+              }
+            });
+          }
+        }
+      } else {
+        this.rolesService.refreshRoles().subscribe({
+          next: (roles) => {
+            this.rolesSubject.next(roles);
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.rolesService.clearCache();
+            this.rolesService.getRoles().subscribe(r => {
+              this.rolesSubject.next(r);
+              this.cdr.detectChanges();
+            });
+          }
+        });
+      }
     } else {
       const userRoles = (this.currentUser?.roles || []).filter(r => r.toLowerCase() !== 'admin');
 
@@ -188,6 +233,20 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR');
+  }
+
+  private collaboratorCoursesFallback(collaborator: any): void {
+    this.rolesService.clearCache();
+    this.rolesService.getRoles().subscribe({
+      next: (r) => {
+        this.rolesSubject.next(r);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.rolesSubject.next({ roles: [], totalRoles: 0 });
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   openCargoDetail(cargo: any) {

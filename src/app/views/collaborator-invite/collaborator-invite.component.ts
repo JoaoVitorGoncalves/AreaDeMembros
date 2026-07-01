@@ -20,18 +20,6 @@ import { CollaboratorAuthService } from '../../services/collaborator-auth.servic
                     <div *ngIf="error" class="error-message">{{ error }}</div>
 
                     <div class="form-field">
-                        <label for="invite-name">Nome</label>
-                        <input id="invite-name" type="text" [(ngModel)]="name" name="name" required
-                            placeholder="Seu nome" (input)="clearError()">
-                    </div>
-
-                    <div class="form-field">
-                        <label for="invite-email">Email</label>
-                        <input id="invite-email" type="email" [(ngModel)]="email" name="email" required
-                            placeholder="seu@email.com" (input)="clearError()">
-                    </div>
-
-                    <div class="form-field">
                         <label for="invite-password">Senha</label>
                         <input id="invite-password" type="password" [(ngModel)]="password" name="password" required
                             placeholder="Mínimo 8 caracteres" (input)="clearError()">
@@ -189,8 +177,6 @@ import { CollaboratorAuthService } from '../../services/collaborator-auth.servic
     `]
 })
 export class CollaboratorInviteComponent {
-    name = '';
-    email = '';
     password = '';
     confirmPassword = '';
     error = '';
@@ -209,7 +195,7 @@ export class CollaboratorInviteComponent {
     }
 
     onSubmit(): void {
-        if (!this.name || !this.email || !this.password || !this.confirmPassword) {
+        if (!this.password || !this.confirmPassword) {
             this.error = 'Preencha todos os campos';
             return;
         }
@@ -233,7 +219,11 @@ export class CollaboratorInviteComponent {
         this.isLoading = true;
         this.error = '';
 
-        this.collaboratorAuth.acceptInvite(token, this.name, this.email, this.password).subscribe({
+        // Only send password - name/email are already stored on the backend
+        this.collaboratorAuth.acceptInviteAsCollaborator(
+            token,
+            this.password
+        ).subscribe({
             next: (response) => {
                 const hash = response.data.collaborator.tenant_hash;
                 if (hash) {
@@ -249,3 +239,4 @@ export class CollaboratorInviteComponent {
         });
     }
 }
+

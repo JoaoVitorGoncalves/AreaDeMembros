@@ -59,7 +59,7 @@ import { AdminService, AdminUser } from '../../services/admin.service';
                         <div class="admin-row" *ngFor="let a of admins">
                             <span>{{ a.name }}</span>
                             <span>{{ a.email }}</span>
-                            <code>{{ a.tenant_hash?.slice(0, 12) }}...</code>
+                            <code>{{ a.tenant_hash.slice(0, 12) }}...</code>
                             <span>{{ a.created_at | date:'dd/MM/yyyy' }}</span>
                             <span>
                                 <a class="btn-link" (click)="openDashboard(a)">Abrir Dashboard</a>

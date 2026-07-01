@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { AdminService } from '../../services/admin.service';
+import { CollaboratorAuthService } from '../../services/collaborator-auth.service';
 import { HttpClient, HttpHeaders, HttpEvent, HttpRequest } from '@angular/common/http';
 
 @Component({
@@ -32,6 +33,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         private authService: AuthService,
         private adminService: AdminService,
+        private collaboratorAuth: CollaboratorAuthService,
         private http: HttpClient
     ) { }
 
@@ -68,7 +70,26 @@ export class LoginComponent implements OnInit, OnDestroy {
                     .pipe(takeUntil(this.destroy$))
                     .subscribe({
                         next: () => this.router.navigate([`/admin/${this.tenantHash}/dashboard`]),
-                        error: (err: any) => this.errorMessage = err.message || 'Erro ao fazer login'
+                        error: (err: any) => {
+                            // If admin login fails, try collaborator login
+                            this.collaboratorAuth.login(this.loginData.email, this.loginData.password)
+                                .pipe(takeUntil(this.destroy$))
+                                .subscribe({
+                                    next: (response) => {
+                                        const hash = response.data.collaborator.tenant_hash;
+                                        if (hash) {
+                                            this.router.navigate([`/admin/${hash}/dashboard`]);
+                                        } else if (this.tenantHash) {
+                                            this.router.navigate([`/admin/${this.tenantHash}/dashboard`]);
+                                        } else {
+                                            this.router.navigate(['/dashboard']);
+                                        }
+                                    },
+                                    error: () => {
+                                        this.errorMessage = err.message || 'Email ou senha incorretos';
+                                    }
+                                });
+                        }
                     });
             } else {
                 this.authService.login(this.loginData.email, this.loginData.password)

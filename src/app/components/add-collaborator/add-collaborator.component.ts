@@ -134,8 +134,15 @@ export class AddCollaboratorComponent {
     }
 
     copyInviteUrl(): void {
-        if (this.inviteUrl) {
-            navigator.clipboard.writeText(this.inviteUrl);
+        if (this.inviteUrl && this.createdCollaborator) {
+            const url = new URL(this.inviteUrl);
+            if (this.createdCollaborator.name) {
+                url.searchParams.set('name', this.createdCollaborator.name);
+            }
+            if (this.createdCollaborator.email) {
+                url.searchParams.set('email', this.createdCollaborator.email);
+            }
+            navigator.clipboard.writeText(url.toString());
             this.successMessage = 'Link copiado!';
             this.cdr.markForCheck();
         }

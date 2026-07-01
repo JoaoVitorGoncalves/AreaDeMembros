@@ -121,6 +121,52 @@ export class CollaboratorAuthService {
         );
     }
 
+    acceptInviteWithDetails(inviteToken: string, password: string, name?: string, email?: string): Observable<AcceptInviteResponse> {
+        const payload: any = {
+            invite_token: inviteToken,
+            password
+        };
+        if (name) payload.name = name;
+        if (email) payload.email = email;
+
+        return this.http.post<AcceptInviteResponse>(`${this.API_URL}/accept-invite`, payload).pipe(
+            tap(response => {
+                if (response.success && response.data?.token) {
+                    this.setSession(response.data);
+                }
+            }),
+            catchError((error: HttpErrorResponse) => {
+                const message = error.status === 404
+                    ? 'Link de convite inválido'
+                    : error.status === 409
+                        ? 'Este convite já foi utilizado'
+                        : error.error?.message || 'Erro ao aceitar convite';
+                return throwError(() => ({ message, status: error.status }));
+            })
+        );
+    }
+
+    acceptInviteAsCollaborator(inviteToken: string, password: string): Observable<AcceptInviteResponse> {
+        return this.http.post<AcceptInviteResponse>(`${this.API_URL}/accept-invite`, {
+            invite_token: inviteToken,
+            password
+        }).pipe(
+            tap(response => {
+                if (response.success && response.data?.token) {
+                    this.setSession(response.data);
+                }
+            }),
+            catchError((error: HttpErrorResponse) => {
+                const message = error.status === 404
+                    ? 'Link de convite inválido'
+                    : error.status === 409
+                        ? 'Este convite já foi utilizado'
+                        : error.error?.message || 'Erro ao aceitar convite';
+                return throwError(() => ({ message, status: error.status }));
+            })
+        );
+    }
+
     logout(): void {
         const token = this.getToken();
         if (token) {
